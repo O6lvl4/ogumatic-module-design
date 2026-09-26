@@ -1,0 +1,7 @@
+name: store
+role: mirror
+external: s3
+knows: []
+surface: [Storage, NewS3, Fake]
+evidence: {tests: contract_test.go, fake: fake.go, contract: contract_test.go}
+state: open

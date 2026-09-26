@@ -1,0 +1,6 @@
+name: meter
+role: meter
+knows: [model]
+surface: [Headroom]
+evidence: {tests: meter_test.go}
+state: open

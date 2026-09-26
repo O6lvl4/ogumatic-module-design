@@ -1,0 +1,6 @@
+name: model
+role: vocabulary
+knows: []
+surface: [Load, Rate]
+evidence: {tests: model_test.go}
+state: open

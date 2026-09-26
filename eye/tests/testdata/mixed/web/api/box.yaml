@@ -1,0 +1,7 @@
+name: api
+role: mirror
+external: http
+knows: []
+surface: [fetchAll]
+evidence: {tests: contract.test.ts, fake: fake.ts, contract: contract.test.ts}
+state: open

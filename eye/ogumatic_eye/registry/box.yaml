@@ -1,0 +1,7 @@
+name: registry
+role: registry
+knows: [vocab, fsmirror, loader, extract, checks]
+surface: [ATLAS_FILE, new_fs, eye, facts_only, atlas_diff]
+evidence:
+  tests: eye/tests/test_eye.py
+state: open

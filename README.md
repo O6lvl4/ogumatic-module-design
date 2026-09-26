@@ -43,7 +43,8 @@ AI 時代向けの術として組み直した 2.0。
 
 | 版 | 内容 |
 | --- | --- |
-| v0.1.0 | 抽象段階。文書・スキーマ・雛形・skill。言語別の検査器は未着手（最初は Go） |
+| v0.1.0 | 抽象段階。文書・スキーマ・雛形・skill |
+| v0.2.0 | 眼。言語非依存の中核＋正規表現の抽出器（Go・TS/JS・Rust・Python・Swift・ObjC・Kotlin・Java・Dart・Ruby）。`uvx --from git+https://github.com/O6lvl4/ogumatic-module-design ogumatic eye .` |
 
 ## 由来
 

@@ -10,7 +10,7 @@
 | 計器 | `meter` | 語彙を受けて語彙を返す純ロジック | vocabulary、下段の meter | 無し | 中段の大半 |
 | 写し | `mirror` | 外界 1 つを 1 関数 1 呼び出しで写す | その外界だけ。内側を知らない葉 | **ここだけ許す** | 外界 1 つに 1 箱 |
 | 翻訳 | `translator` | 写しの形を語彙の形に直す | mirror、vocabulary、meter | 無し（mirror に委ねる） | mirror と 1 対 1 |
-| 名簿 | `registry` | 翻訳を全部知り、組み立てる唯一の場所 | translator、meter、vocabulary | 無し | **repo に 1 つ** |
+| 名簿 | `registry` | 翻訳を全部知り、組み立てる唯一の場所 | translator、mirror、meter、vocabulary | 無し | **repo に 1 つ** |
 | 顔 | `facade` | 使う側に見せる入口 | registry。署名に使う vocabulary | 無し | 入口 4 本まで |
 
 ## 段

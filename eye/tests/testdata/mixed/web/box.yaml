@@ -1,0 +1,6 @@
+name: web
+role: facade
+knows: [api]
+surface: [render]
+evidence: {tests: web.test.ts}
+state: open

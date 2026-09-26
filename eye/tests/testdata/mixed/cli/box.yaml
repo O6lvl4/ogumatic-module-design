@@ -1,0 +1,6 @@
+name: cli
+role: facade
+knows: [store, model]
+surface: [A, B, C, D, E]
+evidence: {tests: main_test.go}
+state: open

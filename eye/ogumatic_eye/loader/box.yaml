@@ -1,0 +1,7 @@
+name: loader
+role: translator
+knows: [vocab]
+surface: [parse_atlas, parse_card]
+evidence:
+  tests: eye/tests/test_eye.py
+state: open

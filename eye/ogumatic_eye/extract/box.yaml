@@ -1,0 +1,8 @@
+name: extract
+role: meter
+knows: [vocab]
+surface: [LANG_BY_EXT, SKIP_DIRS, PLUMBING, TEST_PATH, TS_CONTROL, SIG, TYPE, GO_IMPORT, IMPORT, EFFECT, PUBLIC, TS_EXPORT_LIST, is_public, blocks, lang_of, is_test, file_fact, funcs]
+evidence:
+  tests: eye/tests/test_eye.py
+state: nurtured
+note: 言語の規則表を持つ。tree-sitter の抽出器へ差し替えるまで育てる

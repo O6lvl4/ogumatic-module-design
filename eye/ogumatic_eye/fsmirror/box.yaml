@@ -1,0 +1,10 @@
+name: fsmirror
+role: mirror
+external: filesystem, git, clock
+knows: []
+surface: [Fs, RealFs, FakeFs]
+evidence:
+  tests: eye/tests/test_fs_contract.py
+  fake: fake.py
+  contract: eye/tests/test_fs_contract.py
+state: open

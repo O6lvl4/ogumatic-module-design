@@ -1,0 +1,15 @@
+name: eye
+on: [push, pull_request]
+jobs:
+  eye:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 2 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pyyaml
+      - name: テスト（契約テストを含む）
+        run: PYTHONPATH=eye python3 -m unittest discover -s eye/tests -p 'test_*.py'
+      - name: 自分の眼を自分に
+        run: PYTHONPATH=eye python3 -m ogumatic_eye eye . --range HEAD~1..HEAD

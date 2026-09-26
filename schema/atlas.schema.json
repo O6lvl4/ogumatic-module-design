@@ -22,8 +22,8 @@
       "additionalProperties": false,
       "properties": {
         "function_max": { "type": "integer", "minimum": 1, "default": 30 },
-        "params_warn": { "type": "integer", "minimum": 1, "default": 3 },
-        "nesting_warn": { "type": "integer", "minimum": 1, "default": 3 },
+        "params_warn": { "type": "integer", "minimum": 1, "default": 4 },
+        "nesting_warn": { "type": "integer", "minimum": 1, "default": 4 },
         "file_max": { "type": "integer", "minimum": 1, "default": 120 },
         "file_warn": { "type": "integer", "minimum": 1, "default": 80 },
         "surface_max": { "type": "integer", "minimum": 1, "default": 4 },

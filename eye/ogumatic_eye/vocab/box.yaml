@@ -1,0 +1,7 @@
+name: vocab
+role: vocabulary
+knows: []
+surface: [Card, ROLES, STATES, Atlas, DEFAULTS, thresholds, Func, FileFact, CHECKS, Finding, ALLOWED_KNOWS, EFFECT_ROLE, LoadError]
+evidence:
+  tests: eye/tests/test_eye.py
+state: open

@@ -1,0 +1,18 @@
+ogumatic: v0.2.0
+boxes:
+  model:  model/box.yaml
+  meter:  meter/box.yaml
+  store:  store/box.yaml
+  cli:    cli/box.yaml
+  api:    web/api/box.yaml
+  web:    web/box.yaml
+  report: report/box.yaml
+exceptions:
+  - box: report
+    check: function
+    reason: 試験用。長い関数を告げるに下げる
+    until: 2099-01-01
+  - box: meter
+    check: effect
+    reason: 試験用。期限切れの例外
+    until: 2000-01-01
