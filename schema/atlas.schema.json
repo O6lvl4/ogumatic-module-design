@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/O6lvl4/ogumatic-module-design/schema/atlas.schema.json",
+  "title": "Ogumatic atlas",
+  "type": "object",
+  "required": ["ogumatic", "boxes"],
+  "additionalProperties": false,
+  "properties": {
+    "ogumatic": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" },
+    "boxes": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_-]*$" },
+      "additionalProperties": { "type": "string", "pattern": "box\\.yaml$" }
+    },
+    "nurtured": { "type": "array", "items": { "type": "string" }, "maxItems": 3, "uniqueItems": true },
+    "kits": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+$" }
+    },
+    "eye": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "function_max": { "type": "integer", "minimum": 1, "default": 30 },
+        "params_warn": { "type": "integer", "minimum": 1, "default": 3 },
+        "nesting_warn": { "type": "integer", "minimum": 1, "default": 3 },
+        "file_max": { "type": "integer", "minimum": 1, "default": 120 },
+        "file_warn": { "type": "integer", "minimum": 1, "default": 80 },
+        "surface_max": { "type": "integer", "minimum": 1, "default": 4 },
+        "commit_boxes_max": { "type": "integer", "minimum": 1, "default": 2 }
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["box", "check", "reason", "until"],
+        "additionalProperties": false,
+        "properties": {
+          "box": { "type": "string" },
+          "check": { "enum": ["function", "file", "import", "effect", "surface", "commit"] },
+          "reason": { "type": "string", "maxLength": 120 },
+          "until": { "type": "string", "format": "date" }
+        }
+      }
+    }
+  }
+}

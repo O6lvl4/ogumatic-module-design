@@ -1,0 +1,7 @@
+# 地図。repo 直下に 1 つ。エージェントが最初に読む。
+ogumatic: v0.1.0
+boxes: {}            # name: path/to/box.yaml
+# nurtured: []       # 育てる箱。3 つまで
+# kits: {}           # kit-go: v0.1.0
+# eye: {}            # 閾値の上書き。理由を note に
+# exceptions: []     # {box, check, reason, until}

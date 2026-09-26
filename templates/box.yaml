@@ -1,0 +1,15 @@
+# 箱札。箱のディレクトリ直下に置く。札が正、コードは写し。
+name: <名詞、8 字以下推奨>
+role: <vocabulary | meter | mirror | translator | registry | facade>
+# external: <mirror のみ。写す外界の名>
+knows: []            # import してよい箱の name
+surface: []          # 公開する入口。facade は 4 本まで
+evidence:
+  tests: <テストの場所>
+  # fake: <mirror のみ>
+  # contract: <mirror のみ>
+  # bench:
+  # demo:
+state: open          # open | closed | nurtured
+# closed_on: YYYY-MM-DD
+# note: <1 行。理由だけ>

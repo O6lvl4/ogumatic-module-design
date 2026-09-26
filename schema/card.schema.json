@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/O6lvl4/ogumatic-module-design/schema/card.schema.json",
+  "title": "Ogumatic box card",
+  "type": "object",
+  "required": ["name", "role", "knows", "surface", "evidence", "state"],
+  "additionalProperties": false,
+  "properties": {
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9_-]*$" },
+    "role": { "enum": ["vocabulary", "meter", "mirror", "translator", "registry", "facade"] },
+    "knows": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "external": { "type": "string" },
+    "surface": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "evidence": {
+      "type": "object",
+      "required": ["tests"],
+      "additionalProperties": false,
+      "properties": {
+        "tests": { "type": "string" },
+        "fake": { "type": "string" },
+        "contract": { "type": "string" },
+        "bench": { "type": "string" },
+        "demo": { "type": "string" }
+      }
+    },
+    "state": { "enum": ["open", "closed", "nurtured"] },
+    "closed_on": { "type": "string", "format": "date" },
+    "regenerable": { "type": "boolean", "default": true },
+    "note": { "type": "string", "maxLength": 120 }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "role": { "const": "mirror" } } },
+      "then": {
+        "required": ["external"],
+        "properties": { "evidence": { "required": ["tests", "fake", "contract"] } }
+      }
+    },
+    {
+      "if": { "properties": { "role": { "const": "facade" } } },
+      "then": { "properties": { "surface": { "maxItems": 4 } } }
+    },
+    {
+      "if": { "properties": { "state": { "const": "closed" } } },
+      "then": { "required": ["closed_on"] }
+    }
+  ]
+}
