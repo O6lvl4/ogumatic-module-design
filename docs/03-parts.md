@@ -11,6 +11,22 @@
 
 ## 写しの三つ組
 
+```mermaid
+flowchart LR
+  subgraph box["storage/ 写しの箱"]
+    iface["storage.go<br/>入口 interface"]
+    real["s3.go<br/>本物 mirror"]
+    fake["fake.go<br/>偽物 fake"]
+    contract["contract_test.go<br/>契約テスト"]
+  end
+  s3[("S3")]
+  real ==> s3
+  real -. 実装 .-> iface
+  fake -. 実装 .-> iface
+  contract -- 同じケース --> real
+  contract -- 同じケース --> fake
+```
+
 mirror は単体で存在させない。
 
 ```

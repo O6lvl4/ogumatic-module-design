@@ -1,5 +1,26 @@
 # 04 七則（rules）
 
+```mermaid
+flowchart LR
+  card["札 box.yaml<br/>名前・役・knows・surface・証拠・状態"]
+  atlas["地図 ogumatic.yaml<br/>全札・pin・閾値・例外"]
+  catalog["資料<br/>catalog / spec / templates"]
+  evidence["証拠<br/>テスト・偽物・契約・bench"]
+  agent["エージェント"]
+  code["コード（生成物）"]
+  eye["眼"]
+
+  atlas --> agent
+  card --> agent
+  catalog --> agent
+  agent --> code
+  agent --> evidence
+  code --> eye
+  evidence --> eye
+  card --> eye
+  eye -- 落ちたら札か地図へ戻る --> card
+```
+
 | # | 則 | すること | AI 時代に効く理由 | 検査 |
 | --- | --- | --- | --- | --- |
 | 一 | 札が正 | 箱ごとに `box.yaml` を置く。名前・役・知ってよい相手・入口・証拠・状態 | エージェントは札から箱を作る。CI は札と実体を突き合わせる。コードは生成物 | 眼 3・5 |

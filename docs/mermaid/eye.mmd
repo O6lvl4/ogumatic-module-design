@@ -1,0 +1,24 @@
+flowchart LR
+  code[("コード")]
+  cards[("box.yaml<br/>ogumatic.yaml")]
+  fsmirror["fsmirror（写し）<br/>fs・git・時計"]
+  loader["loader（翻訳）<br/>YAML → 札・地図"]
+  extract["extract（計器）<br/>言語を知る唯一の箱"]
+  world["札・地図"]
+  facts["事実 facts<br/>関数・ファイル・import・副作用・公開・変更"]
+  checks["checks（計器）<br/>六段。言語を知らない"]
+  findings["落とす / 告げる"]
+  cli["cli（顔）<br/>eye・facts・atlas"]
+
+  code --> fsmirror
+  cards --> fsmirror
+  fsmirror --> loader --> world
+  fsmirror --> extract --> facts
+  world --> checks
+  facts --> checks
+  checks --> findings --> cli
+
+  classDef m fill:#1f2933,stroke:#8d99a4,color:#f2f4f6
+  classDef k fill:#1f2933,stroke:#f2c14e,color:#f2f4f6
+  class fsmirror m
+  class loader,extract,checks,cli k

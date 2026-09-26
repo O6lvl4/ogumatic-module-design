@@ -1,0 +1,18 @@
+flowchart LR
+  card["札 box.yaml<br/>名前・役・knows・surface・証拠・状態"]
+  atlas["地図 ogumatic.yaml<br/>全札・pin・閾値・例外"]
+  catalog["資料<br/>catalog / spec / templates"]
+  evidence["証拠<br/>テスト・偽物・契約・bench"]
+  agent["エージェント"]
+  code["コード（生成物）"]
+  eye["眼"]
+
+  atlas --> agent
+  card --> agent
+  catalog --> agent
+  agent --> code
+  agent --> evidence
+  code --> eye
+  evidence --> eye
+  card --> eye
+  eye -- 落ちたら札か地図へ戻る --> card

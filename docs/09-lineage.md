@@ -1,5 +1,29 @@
 # 09 他の段との対照（lineage）
 
+```mermaid
+flowchart TB
+  subgraph cdk["AWS CDK"]
+    direction TB
+    app["App / Stack"] --> l3["L3 patterns"] --> l2["L2 curated"] --> l1["L1 Cfn*<br/>仕様から生成"] --> cfn[("CloudFormation")]
+  end
+  subgraph atomic["Atomic Design"]
+    direction TB
+    page["page"] --> template["template"] --> organism["organism"] --> molecule["molecule"] --> atom["atom"]
+  end
+  subgraph ogu["Ogumatic"]
+    direction TB
+    facade["facade + registry"] --> meter["meter 上段"] --> translator["translator"] --> mirror["mirror<br/>資料から生成"] --> ext[("外界")]
+    meter --> vocabulary["vocabulary"]
+  end
+  app -.-> facade
+  l3 -.-> meter
+  l2 -.-> translator
+  l1 -.-> mirror
+  page -.-> facade
+  organism -.-> meter
+  atom -.-> vocabulary
+```
+
 Ogumatic は何を借り、何を足したか。段を持つ既存の考え方と役ごとに突き合わせる。
 
 ## Atomic Design（Brad Frost, 2013）

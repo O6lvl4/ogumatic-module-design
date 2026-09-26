@@ -15,6 +15,36 @@
 
 ## 段
 
+```mermaid
+flowchart TB
+  facade["顔 facade<br/>入口 4 本まで"]
+  registry["名簿 registry<br/>repo に 1 つ。組み立てる唯一の場所"]
+  translator["翻訳 translator<br/>写しの形を語彙へ"]
+  mirror["写し mirror<br/>外界 1 つに 1 つ。副作用はここだけ"]
+  meter["計器 meter<br/>語彙を受けて語彙を返す"]
+  vocabulary["語彙 vocabulary<br/>値と型。最下段"]
+  fake["偽物 fake<br/>同じ入口、副作用なし"]
+  external[("外界<br/>fs・net・時計・env")]
+
+  facade --> registry
+  registry --> translator
+  registry --> mirror
+  registry --> meter
+  translator --> mirror
+  translator --> meter
+  meter --> vocabulary
+  translator --> vocabulary
+  facade -.-> vocabulary
+  registry -.-> vocabulary
+  mirror ==> external
+  fake -. 同じ入口 .- mirror
+
+  classDef core fill:#1f2933,stroke:#f2c14e,color:#f2f4f6
+  classDef edge fill:#1f2933,stroke:#8d99a4,color:#f2f4f6
+  class facade,registry,translator,meter,vocabulary core
+  class mirror,fake,external edge
+```
+
 ```
 facade        顔      ─ 入口 4 本まで
 registry      名簿    ─ repo に 1 つ。"the one place that lists the providers"
