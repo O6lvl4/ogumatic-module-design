@@ -27,27 +27,24 @@ fn go_imports(lines: List[String]) -> List[String] = {
   out
 }
 
-// 2つ以上の枝に some(呼び出し) を置かないのは almide/almide#2655 の回避。almide 0.62.0 の wasm の test が
-// rc_dec の unreachable に落ちる（0.63.1 では直っている）。枝には数か let に受けた値だけを置き、some で包むのは1か所にする。
 fn rust_import(t: String) -> Option[String] = {
-  let prefix = if string.starts_with(t, "pub(crate) use ") then 15
-    else if string.starts_with(t, "pub use ") then 8
-    else if string.starts_with(t, "use ") then 4
-    else 0
-  if prefix == 0 then none else {
-    let head = cut_at(cut_at(string.drop(t, prefix), ";"), "{")
-    let name = string.strip_suffix(head, "::") ?? head
-    some(name)
-  }
+  let body = if string.starts_with(t, "pub(crate) use ") then some(string.drop(t, 15))
+    else if string.starts_with(t, "pub use ") then some(string.drop(t, 8))
+    else if string.starts_with(t, "use ") then some(string.drop(t, 4))
+    else none
+  option.map(body, (s: String) => {
+    let head = cut_at(cut_at(s, ";"), "{")
+    string.strip_suffix(head, "::") ?? head
+  })
 }
 
 fn py_import(t: String) -> Option[String] =
-  if string.starts_with(t, "import ") then { let name = cut_at(cut_at(string.drop(t, 7), ","), " "); some(name) }
-  else if string.starts_with(t, "from ") then { let name = cut_at(string.drop(t, 5), " "); some(name) }
+  if string.starts_with(t, "import ") then some(cut_at(cut_at(string.drop(t, 7), ","), " "))
+  else if string.starts_with(t, "from ") then some(cut_at(string.drop(t, 5), " "))
   else none
 
 fn almd_import(t: String) -> Option[String] =
-  if string.starts_with(t, "import ") then { let name = cut_at(string.drop(t, 7), " "); some(name) } else none
+  if string.starts_with(t, "import ") then some(cut_at(string.drop(t, 7), " ")) else none
 
 fn imports_of(lang: String, text: String) -> List[String] = {
   let lines = string.lines(text)
