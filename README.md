@@ -32,6 +32,7 @@ AI 時代向けの術として組み直した 2.0。
 | 札 | 箱札 `box.yaml` の仕様 | [docs/06-card.md](docs/06-card.md) |
 | 地図 | `ogumatic.yaml` の仕様 | [docs/07-atlas.md](docs/07-atlas.md) |
 | 導入 | 既存 repo への入れ方と pin の作法 | [docs/08-adoption.md](docs/08-adoption.md) |
+| 対照 | Atomic Design・CDK L1/L2/L3・Clean Architecture との突き合わせ | [docs/09-lineage.md](docs/09-lineage.md) |
 | 語彙 | 日英対訳 | [docs/glossary.md](docs/glossary.md) |
 | スキーマ | 札と地図の JSON Schema | [schema/](schema/) |
 | 雛形 | CLAUDE.md・札・地図 | [templates/](templates/) |
