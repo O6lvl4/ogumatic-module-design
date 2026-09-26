@@ -1,11 +1,16 @@
-// 契約テスト: 本物の出力が偽物と同じ形。
+// 契約テスト: 本物の出力が偽物と同じ形。本物が呼べないときは err の文言をそのまま見せる。
 import self.gramide.probe
 import self.gramide.fakeprobe
 
 test "symbols and tags have the fake's shape" {
-  let real = probe.symbols("spec/mixed/meter/meter.go") ?? ""
-  assert_eq(string.contains(real, "\"symbols\":["), true)
+  match probe.symbols("spec/mixed/meter/meter.go") {
+    ok(real) => assert_eq(string.contains(real, "\"symbols\":["), true),
+    err(e) => assert_eq(e, ""),
+  }
   assert_eq(string.contains(fakeprobe.symbols(["a"]), "\"symbols\":["), true)
-  assert_eq(string.starts_with(probe.tags("spec/mixed/meter/meter.go") ?? "", "def "), true)
+  match probe.tags("spec/mixed/meter/meter.go") {
+    ok(real) => assert_eq(string.starts_with(real, "def "), true),
+    err(e) => assert_eq(e, ""),
+  }
   assert_eq(string.starts_with(fakeprobe.tags(["os.Getenv"]), "ref call "), true)
 }

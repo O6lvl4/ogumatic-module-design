@@ -1,5 +1,10 @@
-// 写し: gramide。構文木の読み手を 1 関数 1 呼び出しで包む。
+// 写し: gramide。構文木の読み手を 1 関数 1 呼び出しで包む。呼べなかったときは何が呼べなかったかを err に残す。
 import process
 
-effect fn symbols(path: String) -> Result[String, String] = ok(process.exec("gramide", ["symbols", path]) ?? "")
-effect fn tags(path: String) -> Result[String, String] = ok(process.exec("gramide", ["tags", path]) ?? "")
+effect fn symbols(path: String) -> Result[String, String] = run("symbols", path)
+effect fn tags(path: String) -> Result[String, String] = run("tags", path)
+
+mod effect fn run(sub: String, path: String) -> Result[String, String] = match process.exec("gramide", [sub, path]) {
+  ok(out) => ok(out),
+  err(e) => err("gramide " + sub + " " + path + ": " + e),
+}

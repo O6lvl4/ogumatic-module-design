@@ -13,7 +13,7 @@ jobs:
           curl -fsSL https://raw.githubusercontent.com/almide/almide/main/tools/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: gramide（抽出器）
-        run: almide install github.com/O6lvl4/gramide-cli
+        run: almide install github.com/O6lvl4/gramide-cli --name gramide
       - name: テスト（契約テストを含む）
         run: almide test
       - name: ビルド
