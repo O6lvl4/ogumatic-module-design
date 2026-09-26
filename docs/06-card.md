@@ -17,7 +17,7 @@
 | `evidence.bench` | string | — | bench の場所 |
 | `evidence.demo` | string | — | 見本の場所 |
 | `state` | enum | ○ | `open`（書いている） `closed`（閉じた。手で直さない） `nurtured`（育てる。repo に 3 つまで） |
-| `closed_on` | date | closed のとき○ | 閉じた日 |
+| `closed_on` | date | closed のとき○ | 閉じた日。`YYYY-MM-DD`。検査器が文字列に正規化する |
 | `regenerable` | bool | — | 札と証拠から作り直してよいか。既定 true |
 | `note` | string | — | 1 行。理由だけ。経緯は書かない |
 
