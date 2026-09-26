@@ -35,10 +35,15 @@ fn rust_import(t: String) -> Option[String] = {
   option.map(body, (s) => string.strip_suffix(cut_at(cut_at(s, ";"), "{"), "::") ?? cut_at(cut_at(s, ";"), "{"))
 }
 
-fn py_import(t: String) -> Option[String] =
-  if string.starts_with(t, "import ") then some(cut_at(cut_at(string.drop(t, 7), ","), " "))
-  else if string.starts_with(t, "from ") then some(cut_at(string.drop(t, 5), " "))
+// 内側の呼び出しを let で受けているのは almide/almide#2655 の回避。両枝が some(f(string.drop(...), lit)) だと
+// test ブロックの wasm が trap する。
+fn py_import(t: String) -> Option[String] = {
+  let after_import = string.drop(t, 7)
+  let after_from = string.drop(t, 5)
+  if string.starts_with(t, "import ") then some(cut_at(cut_at(after_import, ","), " "))
+  else if string.starts_with(t, "from ") then some(cut_at(after_from, " "))
   else none
+}
 
 fn almd_import(t: String) -> Option[String] =
   if string.starts_with(t, "import ") then some(cut_at(string.drop(t, 7), " ")) else none
