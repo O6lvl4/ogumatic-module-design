@@ -1,0 +1,3 @@
+// 語彙: 地図の例外 1 件。期限つきで落とすを告げるに下げる。
+
+type Exception = { box_name: String, check: String, reason: String, until: String }

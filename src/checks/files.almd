@@ -1,0 +1,14 @@
+// 眼 2: ファイル。1 型、120 行まで。
+import self.vocab.filefact
+import self.vocab.finding
+import self.vocab.thresholds
+
+fn check(fs: List[filefact.FileFact], th: thresholds.Thresholds) -> List[finding.Finding] =
+  list.flat_map(list.filter(fs, (f) => not f.is_test and f.box_name != "" and f.graded), (f) => {
+    let a = if list.len(f.types) > 1
+      then [finding.fail("file", f.box_name, f.path, "型が " + int.to_string(list.len(f.types)) + " つ（" + list.join(list.take(f.types, 4), ", ") + "）")] else []
+    let b = if f.lines > th.file_max then [finding.fail("file", f.box_name, f.path, int.to_string(f.lines) + " 行（上限 " + int.to_string(th.file_max) + "）")]
+      else if f.lines > th.file_warn then [finding.warn("file", f.box_name, f.path, int.to_string(f.lines) + " 行")]
+      else []
+    a + b
+  })

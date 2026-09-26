@@ -1,0 +1,14 @@
+// 語彙: ファイルの事実。
+
+type FileFact = {
+  box_name: String,
+  path: String,
+  lang: String,
+  lines: Int,
+  types: List[String],
+  publics: List[String],
+  imports: List[String],
+  effects: List[(Int, String)],
+  is_test: Bool,
+  graded: Bool,
+}

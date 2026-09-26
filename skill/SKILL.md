@@ -14,7 +14,7 @@ description: Ogumatic Module Design（モジュールを役割の段で切り、
 | 切る（「分割して」「箱に切って」） | 役の判定 → 箱の一覧 → 札の下書き。コードはまだ書かない |
 | 札（「box.yaml を書いて」） | 対象の箱を読み、札を書く。`surface` は実体の公開シンボルから、`knows` は import から起こす |
 | 写し（「外界 X の写しを作って」） | mirror・fake・契約テストを 1 コミットで作る。翻訳は別の箱 |
-| 眼（「検査して」「眼を回して」） | `uvx --from git+https://github.com/O6lvl4/ogumatic-module-design ogumatic eye .` を回す（コミットの段は `--range HEAD~1..HEAD`）。地図が無ければ `ogumatic facts . --auto` で事実だけ出す |
+| 眼（「検査して」「眼を回して」） | `ogumatic eye .` を回す（コミットの段は `--range HEAD~1..HEAD`）。無ければ `almide install github.com/O6lvl4/ogumatic-module-design` と `almide install github.com/O6lvl4/gramide-cli` で入れる。地図が無ければ `ogumatic facts . --auto` で事実だけ出す |
 | 地図（「地図を更新して」） | `box.yaml` を走査して `ogumatic.yaml` の `boxes` を同期する。無い札は作らず告げる |
 | 閉じる（「この箱を閉じて」） | 眼を回し、落ちていなければ `state: closed` と `closed_on` を書く |
 

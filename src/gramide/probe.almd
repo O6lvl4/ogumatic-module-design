@@ -1,0 +1,5 @@
+// 写し: gramide。構文木の読み手を 1 関数 1 呼び出しで包む。
+import process
+
+effect fn symbols(path: String) -> Result[String, String] = ok(process.exec("gramide", ["symbols", path]) ?? "")
+effect fn tags(path: String) -> Result[String, String] = ok(process.exec("gramide", ["tags", path]) ?? "")

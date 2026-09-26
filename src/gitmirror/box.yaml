@@ -1,0 +1,10 @@
+name: gitmirror
+role: mirror
+external: git
+knows: []
+surface: [changed, subject]
+evidence:
+  tests: src/gitmirror/git_test.almd
+  fake: fakegit.almd
+  contract: src/gitmirror/git_test.almd
+state: open

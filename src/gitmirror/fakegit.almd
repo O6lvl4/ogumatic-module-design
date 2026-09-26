@@ -1,0 +1,3 @@
+// 偽物: 決まった変更と件名を返す。
+fn changed(files: List[String]) -> List[String] = files
+fn subject(s: String) -> String = s

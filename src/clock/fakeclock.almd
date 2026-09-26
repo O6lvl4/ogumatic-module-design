@@ -1,0 +1,2 @@
+// 偽物: 止まった時計。
+fn now(d: String) -> String = d

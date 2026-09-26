@@ -1,8 +1,0 @@
-name: checks
-role: meter
-knows: [vocab, extract]
-surface: [segments, resolve, box_of, check_functions, check_files, check_imports, check_effects, check_surface, check_commit, check_coverage, apply_exceptions, run_checks]
-evidence:
-  tests: eye/tests/test_eye.py
-state: nurtured
-note: 六段の規則が増える場所

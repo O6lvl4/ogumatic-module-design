@@ -6,10 +6,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 2 }
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - run: pip install pyyaml
+      - name: Rust（almide の native ビルドに要る）
+        run: rustup toolchain install stable --profile minimal
+      - name: almide
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/almide/almide/main/tools/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: gramide（抽出器）
+        run: almide install github.com/O6lvl4/gramide-cli
       - name: テスト（契約テストを含む）
-        run: PYTHONPATH=eye python3 -m unittest discover -s eye/tests -p 'test_*.py'
+        run: almide test
+      - name: ビルド
+        run: almide build
       - name: 自分の眼を自分に
-        run: PYTHONPATH=eye python3 -m ogumatic_eye eye . --range HEAD~1..HEAD
+        run: ./ogumatic eye . --range HEAD~1..HEAD

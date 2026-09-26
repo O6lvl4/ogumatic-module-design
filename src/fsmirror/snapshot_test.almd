@@ -1,0 +1,18 @@
+// 契約テスト: 本物と偽物に同じケースを流す。
+import fs
+import self.fsmirror.snapshot
+import self.fsmirror.fakefs
+
+test "real and fake agree on listing and reading" {
+  let dir = fs.create_temp_dir("ogumatic-snapshot") ?? ""
+  let _ = fs.mkdir_p(dir + "/a")
+  let _ = fs.mkdir_p(dir + "/node_modules")
+  let _ = fs.write(dir + "/a/b.go", "package b\n")
+  let _ = fs.write(dir + "/c.py", "x = 1\n")
+  let _ = fs.write(dir + "/node_modules/x.js", "")
+  let real = snapshot.take(dir, (s) => s == "node_modules", (p) => true) ?? snapshot.World { root: dir, paths: [], texts: [] }
+  let fake_w = fakefs.world(dir, [("a/b.go", "package b\n"), ("c.py", "x = 1\n"), ("node_modules/x.js", "")], (s) => s == "node_modules")
+  assert_eq(real.paths, fake_w.paths)
+  assert_eq(snapshot.text_of(real, "c.py"), snapshot.text_of(fake_w, "c.py"))
+  let _ = fs.remove_all(dir)
+}

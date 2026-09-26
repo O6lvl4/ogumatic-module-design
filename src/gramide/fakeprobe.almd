@@ -1,0 +1,5 @@
+// 偽物: 決まった構文木の答え。
+fn symbols(names: List[String]) -> String =
+  "{\"schema_version\":1,\"complete\":true,\"symbols\":[" + list.join(list.map(names, (n) =>
+    "{\"kind\":\"function\",\"name\":\"" + n + "\",\"owner\":\"\",\"start\":1,\"end\":1}"), ",") + "]}"
+fn tags(calls: List[String]) -> String = list.join(list.map(calls, (c) => "ref call " + c + " L1"), "\n")

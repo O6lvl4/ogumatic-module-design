@@ -1,0 +1,7 @@
+// 偽物: メモリの中の repo。本物と同じ入口、副作用なし。
+import self.fsmirror.snapshot
+
+fn world(root: String, files: List[(String, String)], skip: fn(String) -> Bool) -> snapshot.World = {
+  let kept = list.filter(files, ((p, t)) => not snapshot.skipped(p, skip))
+  snapshot.World { root: root, paths: list.sort(list.map(kept, ((p, t)) => p)), texts: kept }
+}

@@ -1,0 +1,10 @@
+name: clock
+role: mirror
+external: clock
+knows: []
+surface: [now]
+evidence:
+  tests: src/clock/today_test.almd
+  fake: fakeclock.almd
+  contract: src/clock/today_test.almd
+state: open

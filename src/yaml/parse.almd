@@ -1,0 +1,138 @@
+// 計器: YAML の部分集合を読む。札と地図に要る形だけ。
+//   key: scalar / key: [a, b] / key: {k: v} / key: の下の字下げブロック / - item / - k: v の列
+
+type Yaml =
+  | Scalar(String)
+  | Seq(List[Yaml])
+  | Table(List[(String, Yaml)])
+
+fn parse(text: String) -> Yaml = {
+  let lines = list.filter(string.lines(text), (l) => not is_noise(l))
+  if list.is_empty(lines) then Table([])
+  else {
+    let (y, _) = block(lines, 0, indent_of(line_at(lines, 0)))
+    y
+  }
+}
+
+fn is_noise(l: String) -> Bool = {
+  let t = string.trim(l)
+  t == "" or string.starts_with(t, "#")
+}
+
+fn indent_of(l: String) -> Int = string.len(l) - string.len(string.trim_start(l))
+
+fn line_at(lines: List[String], i: Int) -> String = list.get(lines, i) ?? ""
+
+fn is_item(l: String) -> Bool = {
+  let t = string.trim_start(l)
+  t == "-" or string.starts_with(t, "- ")
+}
+
+fn strip_comment(s: String) -> String = match string.index_of(s, " #") {
+  some(i) => string.slice(s, 0, i),
+  none => s,
+}
+
+fn unquote(s: String) -> String = {
+  let t = string.trim(s)
+  let n = string.len(t)
+  let dq = string.starts_with(t, "\"") and string.ends_with(t, "\"")
+  let sq = string.starts_with(t, "'") and string.ends_with(t, "'")
+  if n >= 2 and (dq or sq) then string.slice(t, 1, n - 1) else t
+}
+
+fn split_kv(s: String) -> (String, String) = match string.split_once(s, ":") {
+  some((k, r)) => (string.trim(k), string.trim(r)),
+  none => (string.trim(s), ""),
+}
+
+fn is_kv(s: String) -> Bool =
+  not string.starts_with(s, "\"") and not string.starts_with(s, "'")
+    and not string.starts_with(s, "[") and not string.starts_with(s, "{")
+    and (string.contains(s, ": ") or string.ends_with(s, ":"))
+
+fn block(lines: List[String], i: Int, ind: Int) -> (Yaml, Int) =
+  if i >= list.len(lines) then (Table([]), i)
+  else if is_item(line_at(lines, i)) then seq(lines, i, ind, [])
+  else table(lines, i, ind, [])
+
+fn table(lines: List[String], i: Int, ind: Int, acc: List[(String, Yaml)]) -> (Yaml, Int) =
+  if i >= list.len(lines) then (Table(acc), i)
+  else {
+    let l = line_at(lines, i)
+    if indent_of(l) != ind or is_item(l) then (Table(acc), i)
+    else {
+      let (key, rest) = split_kv(string.trim(strip_comment(l)))
+      let (v, j) = value_of(lines, i, ind, rest)
+      table(lines, j, ind, acc + [(key, v)])
+    }
+  }
+
+fn value_of(lines: List[String], i: Int, ind: Int, rest: String) -> (Yaml, Int) =
+  if rest == "" then nested(lines, i, ind)
+  else if string.starts_with(rest, "[") then (Seq(inline_seq(rest)), i + 1)
+  else if string.starts_with(rest, "{") then (Table(inline_table(rest)), i + 1)
+  else (Scalar(unquote(rest)), i + 1)
+
+fn nested(lines: List[String], i: Int, ind: Int) -> (Yaml, Int) = {
+  let nxt = line_at(lines, i + 1)
+  let deeper = indent_of(nxt) > ind or (indent_of(nxt) == ind and is_item(nxt))
+  if i + 1 < list.len(lines) and deeper then block(lines, i + 1, indent_of(nxt))
+  else (Scalar(""), i + 1)
+}
+
+fn seq(lines: List[String], i: Int, ind: Int, acc: List[Yaml]) -> (Yaml, Int) =
+  if i >= list.len(lines) then (Seq(acc), i)
+  else {
+    let l = line_at(lines, i)
+    if indent_of(l) != ind or not is_item(l) then (Seq(acc), i)
+    else {
+      let rest = string.trim(strip_comment(string.drop(string.trim_start(l), 1)))
+      let (v, j) = item_of(lines, i, ind, rest)
+      seq(lines, j, ind, acc + [v])
+    }
+  }
+
+fn item_of(lines: List[String], i: Int, ind: Int, rest: String) -> (Yaml, Int) =
+  if rest == "" then nested(lines, i, ind)
+  else if is_kv(rest) then {
+    let (k, r) = split_kv(rest)
+    let (v, j) = value_of(lines, i, ind + 2, r)
+    let (more, k2) = table(lines, j, ind + 2, [])
+    (Table([(k, v)] + entries(more)), k2)
+  }
+  else (Scalar(unquote(rest)), i + 1)
+
+fn inline_seq(rest: String) -> List[Yaml] = {
+  let inner = string.slice(rest, 1, string.len(rest) - 1)
+  string.split(inner, ",")
+    |> list.map((s) => unquote(s))
+    |> list.filter((s) => s != "")
+    |> list.map((s) => Scalar(s))
+}
+
+fn inline_table(rest: String) -> List[(String, Yaml)] = {
+  let inner = string.slice(rest, 1, string.len(rest) - 1)
+  string.split(inner, ",")
+    |> list.filter((s) => string.trim(s) != "")
+    |> list.map((s) => { let (k, v) = split_kv(string.trim(s)); (k, Scalar(unquote(v))) })
+}
+
+// 読み手
+fn empty_table() -> Yaml = Table([])
+fn empty_seq() -> Yaml = Seq([])
+fn get(y: Yaml, key: String) -> Option[Yaml] = match y {
+  Table(es) => option.map(list.find(es, ((k, v)) => k == key), ((k, v)) => v),
+  _ => none,
+}
+fn entries(y: Yaml) -> List[(String, Yaml)] = match y { Table(es) => es, _ => [] }
+fn items(y: Yaml) -> List[Yaml] = match y { Seq(xs) => xs, _ => [] }
+fn text(y: Yaml) -> String = match y { Scalar(s) => s, _ => "" }
+fn strs(y: Yaml) -> List[String] = match y {
+  Seq(xs) => list.map(xs, (x) => text(x)),
+  Scalar(s) => if s == "" then [] else [s],
+  _ => [],
+}
+fn get_str(y: Yaml, key: String) -> String = text(get(y, key) ?? Scalar(""))
+fn get_strs(y: Yaml, key: String) -> List[String] = strs(get(y, key) ?? Seq([]))

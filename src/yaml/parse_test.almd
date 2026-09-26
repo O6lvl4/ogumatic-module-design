@@ -1,0 +1,29 @@
+import self.yaml.parse
+
+fn ex_at(y: parse.Yaml, key: String, i: Int) -> parse.Yaml =
+  list.get(parse.items(parse.get(y, key) ?? parse.empty_seq()), i) ?? parse.empty_table()
+
+test "scalars, inline list, inline table" {
+  let y = parse.parse("name: meter\nrole: meter # 役\nknows: [book, model]\nevidence: {tests: meter_test.go, bench: b}\nstate: open\n")
+  assert_eq(parse.get_str(y, "name"), "meter")
+  assert_eq(parse.get_str(y, "role"), "meter")
+  assert_eq(parse.get_strs(y, "knows"), ["book", "model"])
+  assert_eq(parse.get_str(parse.get(y, "evidence") ?? parse.empty_table(), "bench"), "b")
+}
+test "nested block and list of tables" {
+  let y = parse.parse("ogumatic: v0.2.0\nboxes:\n  model: model/box.yaml\n  meter: meter/box.yaml\nexceptions:\n  - box: report\n    check: function\n    until: 2099-01-01\n  - box: meter\n    check: effect\n")
+  assert_eq(list.len(parse.entries(parse.get(y, "boxes") ?? parse.empty_table())), 2)
+  assert_eq(list.len(parse.items(parse.get(y, "exceptions") ?? parse.empty_seq())), 2)
+  assert_eq(parse.get_str(ex_at(y, "exceptions", 0), "check"), "function")
+  assert_eq(parse.get_str(ex_at(y, "exceptions", 1), "box"), "meter")
+}
+test "empty value and quoted" {
+  let y = parse.parse("a:\nb: \"x y\"\nc: 'z'\n")
+  assert_eq(parse.get_str(y, "a"), "")
+  assert_eq(parse.get_str(y, "b"), "x y")
+  assert_eq(parse.get_str(y, "c"), "z")
+}
+test "block list at same indent" {
+  let y = parse.parse("nurtured:\n- a\n- b\n")
+  assert_eq(parse.get_strs(y, "nurtured"), ["a", "b"])
+}

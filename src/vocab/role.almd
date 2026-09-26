@@ -1,0 +1,52 @@
+// 語彙: 役と、役ごとに知ってよい相手。
+
+type Role =
+  | Vocabulary
+  | Meter
+  | Mirror
+  | Translator
+  | Registry
+  | Facade
+
+fn role_name(r: Role) -> String = match r {
+  Vocabulary => "vocabulary",
+  Meter => "meter",
+  Mirror => "mirror",
+  Translator => "translator",
+  Registry => "registry",
+  Facade => "facade",
+}
+
+fn parse_role(s: String) -> Option[Role] = match s {
+  "vocabulary" => some(Vocabulary),
+  "meter" => some(Meter),
+  "mirror" => some(Mirror),
+  "translator" => some(Translator),
+  "registry" => some(Registry),
+  "facade" => some(Facade),
+  _ => none,
+}
+
+// 役 a の箱は 役 b の箱を知ってよいか。
+fn may_know(a: Role, b: Role) -> Bool = match a {
+  Vocabulary => false,
+  Mirror => false,
+  Meter => match b { Vocabulary => true, Meter => true, _ => false },
+  Translator => match b { Mirror => true, Vocabulary => true, Meter => true, _ => false },
+  Registry => match b { Facade => false, Registry => false, _ => true },
+  Facade => match b { Registry => true, Vocabulary => true, _ => false },
+}
+
+fn is_mirror(r: Role) -> Bool = role_name(r) == "mirror"
+fn is_facade(r: Role) -> Bool = role_name(r) == "facade"
+
+test "role round trip" {
+  assert_eq(role_name(parse_role("translator") ?? Vocabulary), "translator")
+  assert_eq(option.is_none(parse_role("layer")), true)
+}
+test "role table" {
+  assert_eq(may_know(Facade, Mirror), false)
+  assert_eq(may_know(Registry, Mirror), true)
+  assert_eq(may_know(Meter, Vocabulary), true)
+  assert_eq(may_know(Vocabulary, Meter), false)
+}

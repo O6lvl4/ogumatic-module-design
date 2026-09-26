@@ -1,0 +1,53 @@
+// 翻訳: YAML のテキストを札と地図の値に直す。
+import self.vocab.role
+import self.vocab.state
+import self.vocab.card
+import self.vocab.exception
+import self.vocab.atlas
+import self.yaml.parse
+
+fn dir_of(path: String) -> String = match string.last_index_of(path, "/") {
+  some(i) => string.slice(path, 0, i),
+  none => "",
+}
+
+mod fn build_card(y: parse.Yaml, path: String, r: role.Role, st: state.State) -> card.Card = {
+  let ev = parse.get(y, "evidence") ?? parse.empty_table()
+  card.Card {
+    name: parse.get_str(y, "name"), role: r, knows: parse.get_strs(y, "knows"), surface: parse.get_strs(y, "surface"),
+    tests: parse.get_str(ev, "tests"), fake: parse.get_str(ev, "fake"), contract: parse.get_str(ev, "contract"),
+    state: st, closed_on: parse.get_str(y, "closed_on"), external: parse.get_str(y, "external"), path: dir_of(path),
+  }
+}
+
+fn load_card(text: String, path: String) -> Result[card.Card, String] = {
+  let y = parse.parse(text)
+  let role_s = parse.get_str(y, "role")
+  let state_s = parse.get_str(y, "state")
+  if parse.get_str(y, "name") == "" then err(path + ": name が無い")
+  else match role.parse_role(role_s) {
+    none => err(path + ": role が不正 (" + role_s + ")"),
+    some(r) => match state.parse_state(if state_s == "" then "open" else state_s) {
+      none => err(path + ": state が不正 (" + state_s + ")"),
+      some(st) => ok(build_card(y, path, r, st)),
+    },
+  }
+}
+
+mod fn exception_of(e: parse.Yaml) -> exception.Exception = exception.Exception {
+  box_name: parse.get_str(e, "box"), check: parse.get_str(e, "check"),
+  reason: parse.get_str(e, "reason"), until: parse.get_str(e, "until"),
+}
+
+fn load_atlas(text: String) -> Result[atlas.Atlas, String] = {
+  let y = parse.parse(text)
+  let version = parse.get_str(y, "ogumatic")
+  if version == "" then err("ogumatic.yaml: ogumatic（版）が無い")
+  else {
+    let boxes = list.map(parse.entries(parse.get(y, "boxes") ?? parse.empty_table()), ((k, v)) => (k, parse.text(v)))
+    let eye = list.filter_map(parse.entries(parse.get(y, "eye") ?? parse.empty_table()),
+      ((k, v)) => option.map(result.to_option(int.parse(parse.text(v))), (n) => (k, n)))
+    let exceptions = list.map(parse.items(parse.get(y, "exceptions") ?? parse.empty_seq()), exception_of)
+    ok(atlas.Atlas { version: version, boxes: boxes, nurtured: parse.get_strs(y, "nurtured"), eye: eye, exceptions: exceptions })
+  }
+}

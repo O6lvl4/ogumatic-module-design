@@ -1,0 +1,13 @@
+// 語彙: 関数の事実。
+
+type Func = {
+  box_name: String,
+  file: String,
+  name: String,
+  line: Int,
+  length: Int,
+  params: Int,
+  nesting: Int,
+  public: Bool,
+  is_test: Bool,
+}

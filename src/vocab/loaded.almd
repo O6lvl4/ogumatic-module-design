@@ -1,0 +1,5 @@
+// 語彙: 読み込んだ地図と札の束。
+import self.vocab.atlas
+import self.vocab.card
+
+type Loaded = { atlas: atlas.Atlas, cards: List[card.Card], dirs: List[(String, String)] }

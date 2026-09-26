@@ -1,0 +1,7 @@
+name: vocab
+role: vocabulary
+knows: []
+surface: [Role, role_name, parse_role, may_know, is_mirror, is_facade, State, state_name, parse_state, Card, Exception, Atlas, Func, FileFact, Level, level_name, is_fail_level, Finding, fail, warn, is_fail, line, sort_key, to_json, Gathered, Loaded, Thresholds, defaults, pick, with_overrides]
+evidence:
+  tests: src/vocab
+state: open

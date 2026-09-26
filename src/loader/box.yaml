@@ -1,0 +1,7 @@
+name: loader
+role: translator
+knows: [vocab, yaml]
+surface: [dir_of, load_card, load_atlas]
+evidence:
+  tests: src/loader/load.almd
+state: open

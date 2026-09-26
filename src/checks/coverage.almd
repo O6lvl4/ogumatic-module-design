@@ -1,0 +1,17 @@
+// 眼 7: 箱の外にあるソース、抽出器の無い言語、読み切れなかったファイル。
+import self.vocab.filefact
+import self.vocab.finding
+import self.extract.lang
+
+mod fn dir_of(p: String) -> String = match string.last_index_of(p, "/") { some(i) => string.slice(p, 0, i), none => "." }
+
+fn check(fs: List[filefact.FileFact], unsupported: List[(String, String)]) -> List[finding.Finding] = {
+  let outside = list.filter(fs, (f) => f.box_name == "" and not f.is_test and not lang.plumbing(lang.base_of(f.path)))
+    |> list.map((f) => dir_of(f.path)) |> list.sort |> list.dedup
+    |> list.map((d) => finding.warn("coverage", "", d, "箱の外にソースがある"))
+  let unread = list.filter(fs, (f) => f.box_name != "" and not f.is_test and not f.graded)
+    |> list.map((f) => finding.warn("coverage", f.box_name, f.path, "gramide が読み切れない。この段は測っていない"))
+  let langs = list.map(unsupported, ((p, l)) => l) |> list.sort |> list.dedup
+    |> list.map((l) => finding.warn("coverage", "", "-", "抽出器が無い言語（" + l + "）。その言語のファイルは測っていない"))
+  outside + unread + langs
+}

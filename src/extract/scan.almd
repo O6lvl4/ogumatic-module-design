@@ -1,0 +1,70 @@
+// 計器: テキストと gramide の出力から事実を出す。
+import json
+import self.vocab.fnfact
+import self.vocab.filefact
+import self.extract.lang
+import self.extract.importline
+import self.extract.shape
+
+type Sym = { kind: String, name: String, owner: String, start: Int, end: Int }
+
+fn symbols(js: String) -> List[Sym] = match json.parse(string.trim(js)) {
+  ok(j) => list.map(json.get_array(j, "symbols") ?? [], (s) => Sym {
+    kind: json.get_string(s, "kind") ?? "", name: json.get_string(s, "name") ?? "",
+    owner: json.get_string(s, "owner") ?? "", start: json.get_int(s, "start") ?? 0, end: json.get_int(s, "end") ?? 0,
+  }),
+  err(e) => [],
+}
+
+mod fn line_at(lines: List[String], n: Int) -> String = list.get(lines, n - 1) ?? ""
+mod fn is_fn(s: Sym) -> Bool = s.kind == "function" or s.kind == "method"
+mod fn is_type(s: Sym) -> Bool = s.kind == "type" or s.kind == "class"
+
+mod fn to_func(box_name: String, path: String, lg: String, lines: List[String], s: Sym, t: Bool) -> fnfact.Func = fnfact.Func {
+  box_name: box_name, file: path, name: s.name, line: s.start, length: s.end - s.start + 1,
+  params: shape.params_of(lines, s.start, s.name),
+  nesting: shape.nesting_of(lines, s.start, s.end, lang.indent_unit(lg)),
+  public: lang.is_public(lg, s.name, line_at(lines, s.start), s.owner),
+  is_test: t,
+}
+
+// "ref call NAME L12" の行から、副作用の呼び出しだけ拾う
+fn call_effects(lg: String, tags: String) -> List[(Int, String)] = {
+  let prefixes = lang.effect_calls(lg)
+  list.filter_map(string.lines(tags), (l: String) =>
+    if string.starts_with(l, "ref call ") then {
+      let parts = string.split(string.drop(l, 9), " ")
+      let name = list.get(parts, 0) ?? ""
+      let ln = int.parse(string.drop(list.get(parts, 1) ?? "L0", 1)) ?? 0
+      if list.any(prefixes, (p) => string.starts_with(name, p)) then some((ln, name)) else none
+    } else none)
+}
+
+fn import_effects(lg: String, lines: List[String], imps: List[String]) -> List[(Int, String)] = {
+  let eff = lang.effect_imports(lg)
+  list.filter_map(imps, (imp: String) =>
+    if list.any(eff, (e) => imp == e or string.starts_with(imp, e + "::") or string.starts_with(imp, e + "."))
+    then some(((list.find_index(lines, (l) => string.contains(l, imp)) ?? 0) + 1, imp)) else none)
+}
+
+mod fn code_lines(lines: List[String]) -> Int =
+  list.count(lines, (l) => {
+    let t = string.trim(l)
+    t != "" and not string.starts_with(t, "//") and not string.starts_with(t, "#") and not string.starts_with(t, "*") and not string.starts_with(t, "/*")
+  })
+
+fn file_fact(box_name: String, path: String, text: String, lg: String, symbols_json: String, tags: String) -> (filefact.FileFact, List[fnfact.Func]) = {
+  let lines = string.lines(text)
+  let t = lang.is_test(path)
+  let syms = symbols(symbols_json)
+  let fns = list.filter(syms, is_fn) |> list.map((s) => to_func(box_name, path, lg, lines, s, t))
+  let types = list.filter(syms, is_type) |> list.map((s) => s.name)
+  let publics = list.filter(syms, (s) => (is_fn(s) or is_type(s)) and lang.is_public(lg, s.name, line_at(lines, s.start), s.owner))
+    |> list.map((s) => s.name) |> list.sort |> list.dedup
+  let imps = importline.imports_of(lg, text)
+  let ff = filefact.FileFact {
+    box_name: box_name, path: path, lang: lg, lines: code_lines(lines), types: types, publics: publics, imports: imps,
+    effects: call_effects(lg, tags) + import_effects(lg, lines, imps), is_test: t, graded: symbols_json != "",
+  }
+  (ff, fns)
+}

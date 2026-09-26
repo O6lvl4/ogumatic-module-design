@@ -1,0 +1,28 @@
+import self.extract.scan
+import self.extract.shape
+
+test "params from a signature" {
+  assert_eq(shape.params_of(["func Headroom(l model.Load) int {"], 1, "Headroom"), 1)
+  assert_eq(shape.params_of(["func (s *s3) Put(ctx context.Context, key string, data []byte) error {"], 1, "s3.Put"), 3)
+  assert_eq(shape.params_of(["def build(rows, limit=3):"], 1, "build"), 2)
+  assert_eq(shape.params_of(["    def put(self, key, data):"], 1, "Store.put"), 2)
+  assert_eq(shape.params_of(["fn f(a: Map[String, Int], b: (Int, Int)) -> Int = {"], 1, "f"), 2)
+  assert_eq(shape.params_of(["func A() {}"], 1, "A"), 0)
+}
+test "nesting from indentation, continuation lines do not count" {
+  assert_eq(shape.nesting_of(["func f() {", "\tif x {", "\t\tfor y {", "\t\t\tz()", "\t\t}", "\t}", "}"], 1, 7, 1), 3)
+  assert_eq(shape.nesting_of(["def f():", "    return 1"], 1, 2, 4), 1)
+  assert_eq(shape.nesting_of(["fn f() -> Int =", "  a(b,", "      c,", "      d)"], 1, 4, 2), 1)
+}
+test "effects from tags and imports" {
+  assert_eq(scan.call_effects("go", "def function Headroom L10-15\nref call os.Getenv L11\nref call model.New L12\n"), [(11, "os.Getenv")])
+  assert_eq(scan.import_effects("go", ["import (", "\t\"os\"", ")"], ["os", "mixed/model"]), [(2, "os")])
+}
+test "symbols json" {
+  let js = "{\"symbols\":[{\"kind\":\"function\",\"name\":\"A\",\"owner\":\"\",\"start\":3,\"end\":5},{\"kind\":\"type\",\"name\":\"T\",\"owner\":\"\",\"start\":1,\"end\":1}]}"
+  let (ff, fns) = scan.file_fact("b", "x.go", "type T struct{}\n\nfunc A(x int) {\n\treturn\n}\n", "go", js, "")
+  assert_eq(ff.types, ["T"])
+  assert_eq(ff.publics, ["A", "T"])
+  assert_eq(option.map(list.first(fns), (f) => f.length) ?? 0, 3)
+  assert_eq(option.map(list.first(fns), (f) => f.params) ?? 0, 1)
+}

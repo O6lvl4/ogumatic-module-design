@@ -1,0 +1,29 @@
+import self.extract.lang
+import self.extract.importline
+
+test "ext and lang" {
+  assert_eq(lang.lang_of("a/b/c.go") ?? "-", "go")
+  assert_eq(lang.lang_of("x.ts") ?? "-", "-")
+  assert_eq(lang.unsupported_lang("x.tsx") ?? "-", "ts")
+  assert_eq(lang.ext_of("dir.v1/file"), "")
+}
+test "tests are recognised" {
+  assert_eq(lang.is_test("spec/mixed/meter/meter.go"), true)
+  assert_eq(lang.is_test("src/yaml/parse_test.almd"), true)
+  assert_eq(lang.is_test("src/yaml/parse.almd"), false)
+  assert_eq(lang.is_test("report/test_x.py"), true)
+}
+test "imports per language" {
+  assert_eq(importline.go_imports(["import (", "\t\"os\"", "", "\t\"mixed/model\"", ")", "import \"fmt\""]), ["os", "mixed/model", "fmt"])
+  assert_eq(importline.rust_import("pub use crate::model::Load;") ?? "-", "crate::model::Load")
+  assert_eq(importline.rust_import("use std::{fs, io};") ?? "-", "std")
+  assert_eq(importline.py_import("from ogumatic_eye.vocab import x") ?? "-", "ogumatic_eye.vocab")
+  assert_eq(importline.py_import("import os, sys") ?? "-", "os")
+  assert_eq(importline.almd_import("import self.vocab.card") ?? "-", "self.vocab.card")
+}
+test "public rules" {
+  assert_eq(lang.is_public("go", "Headroom", "func Headroom()", ""), true)
+  assert_eq(lang.is_public("go", "main", "func main()", ""), false)
+  assert_eq(lang.is_public("rust", "new", "    pub fn new()", "Meter"), false)
+  assert_eq(lang.is_public("python", "_hidden", "def _hidden()", ""), false)
+}

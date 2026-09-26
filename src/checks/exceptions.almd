@@ -1,0 +1,24 @@
+// 地図の exceptions で落とすを告げるに下げる。期限切れは落としたまま印を付ける。
+import self.vocab.exception
+import self.vocab.finding
+
+mod fn date_int(d: String) -> Int = int.parse(string.replace(d, "-", "")) ?? 0
+
+mod fn downgrade(f: finding.Finding, e: exception.Exception, today: String) -> finding.Finding =
+  if date_int(e.until) >= date_int(today)
+  then finding.warn(f.check, f.box_name, f.location, f.message + " [例外: " + e.reason + " / " + e.until + " まで]")
+  else finding.fail(f.check, f.box_name, f.location, f.message + " [例外の期限切れ " + e.until + "]")
+
+fn apply(fs: List[finding.Finding], exs: List[exception.Exception], today: String) -> List[finding.Finding] =
+  list.map(fs, (f) =>
+    if not finding.is_fail(f) then f
+    else match list.find(exs, (e) => e.box_name == f.box_name and e.check == f.check) {
+      some(e) => downgrade(f, e, today),
+      none => f,
+    })
+
+test "in-date exception downgrades, expired keeps failing" {
+  let ex = [exception.Exception { box_name: "a", check: "file", reason: "r", until: "2099-01-01" }, exception.Exception { box_name: "b", check: "file", reason: "r", until: "2000-01-01" }]
+  let out = apply([finding.fail("file", "a", "x", "m"), finding.fail("file", "b", "y", "m")], ex, "2026-06-01")
+  assert_eq(list.map(out, finding.is_fail), [false, true])
+}

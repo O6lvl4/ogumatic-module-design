@@ -1,0 +1,8 @@
+name: extract
+role: meter
+knows: [vocab]
+surface: [ext_of, lang_of, unsupported_lang, skip_dir, plumbing, base_of, is_test, indent_unit, effect_calls, effect_imports, is_public, cut_at, quoted, go_imports, rust_import, py_import, almd_import, imports_of, params_of, indent_of, nesting_of, Sym, symbols, call_effects, import_effects, file_fact]
+evidence:
+  tests: src/extract
+state: nurtured
+note: 言語の規則表を持つ。gramide が言語を足したらここに 1 行足す

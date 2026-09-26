@@ -1,0 +1,71 @@
+// 計器: import 文とパスを箱に対応づける。
+
+mod fn dropped(s: String) -> Bool = list.contains(["", ".", "..", "@", "crate", "super", "self"], s)
+
+fn segments(imp: String) -> List[String] = {
+  let cleaned = string.replace(string.replace(string.trim(imp), "\"", ""), "'", "")
+  string.split(cleaned, "/")
+    |> list.flat_map((a) => string.split(a, "::"))
+    |> list.flat_map((b) => string.split(b, "."))
+    |> list.filter((s) => not dropped(s))
+}
+
+mod fn dir_segs(name: String, d: String) -> List[String] = {
+  let segs = list.filter(string.split(d, "/"), (s) => s != "")
+  if list.is_empty(segs) then [name] else segs
+}
+
+// 連続一致なら 2×長さ、末尾だけ一致なら 1、無ければ 0
+fn score_of(segs: List[String], ds: List[String]) -> Int = {
+  let n = list.len(ds)
+  let hit = list.any(list.range(0, list.len(segs) - n + 1), (i) => list.slice(segs, i, i + n) == ds)
+  if hit then 2 * n
+  else if list.contains(segs, list.last(ds) ?? "") then 1
+  else 0
+}
+
+// (箱名, 曖昧か)。dirs は 箱名 → ディレクトリ。
+fn resolve(imp: String, dirs: List[(String, String)]) -> (Option[String], Bool) = {
+  let segs = segments(imp)
+  var best: Option[String] = none
+  var score = 0
+  var tie = false
+  for (name, d) in dirs {
+    let sc = score_of(segs, dir_segs(name, d))
+    if sc > score then { best = some(name); score = sc; tie = false }
+    else if sc > 0 and sc == score then tie = true
+    else ()
+  }
+  (best, tie)
+}
+
+fn box_of(path: String, dirs: List[(String, String)]) -> String = {
+  var best = ""
+  var depth = -1
+  for (name, d) in dirs {
+    if (d == "" or string.starts_with(path, d + "/")) and string.len(d) > depth then { best = name; depth = string.len(d) } else ()
+  }
+  best
+}
+
+test "segments" {
+  assert_eq(segments("\"mixed/provider/aws\""), ["mixed", "provider", "aws"])
+  assert_eq(segments("self.vocab.card"), ["vocab", "card"])
+  assert_eq(segments("crate::meter::Load"), ["meter", "Load"])
+  assert_eq(segments("../meter"), ["meter"])
+}
+test "resolve picks the longest match" {
+  let dirs = [("model", "model"), ("aws", "provider/aws"), ("api", "web/api")]
+  let (a, _) = resolve("mixed/provider/aws", dirs)
+  assert_eq(a ?? "-", "aws")
+  let (b, _) = resolve("./api/client", dirs)
+  assert_eq(b ?? "-", "api")
+  let (c, _) = resolve("os", dirs)
+  assert_eq(c ?? "-", "-")
+}
+test "box_of takes the deepest dir" {
+  let dirs = [("web", "web"), ("api", "web/api")]
+  assert_eq(box_of("web/api/client.ts", dirs), "api")
+  assert_eq(box_of("web/index.ts", dirs), "web")
+  assert_eq(box_of("tools/gen.py", dirs), "")
+}

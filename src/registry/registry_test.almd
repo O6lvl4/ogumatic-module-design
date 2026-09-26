@@ -1,0 +1,27 @@
+// 見本 repo（spec/mixed）に眼を当てる。落とす 6 種と告げる 4 種が出ること。
+import self.registry.registry
+import self.vocab.finding
+import self.vocab.gathered
+
+fn has(found: List[finding.Finding], is_fail: Bool, check: String, box_name: String, needle: String) -> Bool =
+  list.any(found, (f) => finding.is_fail(f) == is_fail and f.check == check and f.box_name == box_name and string.contains(f.message, needle))
+
+test "the mixed fixture is judged" {
+  let found = registry.eye("spec/mixed", "", false) ?? []
+  assert_eq(has(found, true, "file", "model", "型が 2"), true)
+  assert_eq(has(found, true, "effect", "meter", "期限切れ"), true)
+  assert_eq(has(found, true, "import", "cli", "meter"), true)
+  assert_eq(has(found, true, "surface", "cli", "5 本"), true)
+  assert_eq(has(found, true, "surface", "cli", "F は札の surface に無い"), true)
+  assert_eq(has(found, false, "function", "report", "例外"), true)
+  assert_eq(has(found, false, "import", "cli", "facade が mirror"), true)
+  assert_eq(list.any(found, (f) => f.check == "coverage" and f.location == "tools"), true)
+  assert_eq(list.any(found, (f) => f.check == "coverage" and string.contains(f.message, "ts")), true)
+  assert_eq(list.any(found, (f) => f.box_name == "store" and finding.is_fail(f)), false)
+}
+
+test "facts without an atlas" {
+  let g = registry.facts_only("spec/mixed", true) ?? gathered.Gathered { facts: [], funcs: [], unsupported: [] }
+  assert_eq(list.any(g.funcs, (f) => f.name == "build" and f.length > 30), true)
+  assert_eq(list.any(g.facts, (f) => f.box_name == "store"), true)
+}

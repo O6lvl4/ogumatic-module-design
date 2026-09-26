@@ -1,7 +1,0 @@
-name: cli
-role: facade
-knows: [registry, vocab]
-surface: [main]
-evidence:
-  tests: eye/tests/test_eye.py
-state: open

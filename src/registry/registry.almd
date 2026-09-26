@@ -1,0 +1,96 @@
+// 名簿: 写し・翻訳・計器を列挙し、組み立てる唯一の場所。
+import self.vocab.card
+import self.vocab.atlas
+import self.vocab.fnfact
+import self.vocab.filefact
+import self.vocab.loaded
+import self.vocab.gathered
+import self.vocab.finding
+import self.vocab.thresholds
+import self.loader.load
+import self.extract.lang
+import self.extract.scan
+import self.checks.run
+import self.checks.exceptions
+import self.checks.resolve
+import self.fsmirror.snapshot
+import self.gitmirror.git
+import self.gramide.probe
+import self.clock.today
+
+let ATLAS_FILE = "ogumatic.yaml"
+
+
+mod fn wanted(rel: String) -> Bool = string.ends_with(rel, ".yaml") or option.is_some(lang.lang_of(rel))
+
+effect fn read_world(root: String) -> Result[snapshot.World, String] = snapshot.take(root, lang.skip_dir, wanted)
+
+effect fn load_all(w: snapshot.World) -> Result[loaded.Loaded, String] = {
+  if not snapshot.has(w, ATLAS_FILE) then err(ATLAS_FILE + " が無い")
+  else {
+    let a = load.load_atlas(snapshot.text_of(w, ATLAS_FILE))!
+    let cards = list.map(a.boxes, ((name, p)) =>
+      if snapshot.has(w, p) then load.load_card(snapshot.text_of(w, p), p)!
+      else err("地図の " + name + " の札 " + p + " が無い")!)!
+    ok(loaded.Loaded { atlas: a, cards: cards, dirs: list.map(cards, (c) => (c.name, c.path)) })
+  }
+}
+
+effect fn gather(w: snapshot.World, dirs: List[(String, String)]) -> Result[gathered.Gathered, String] = {
+  var fs: List[filefact.FileFact] = []
+  var funcs: List[fnfact.Func] = []
+  var unsupported: List[(String, String)] = []
+  for p in w.paths {
+    if lang.is_test(p) then ()
+    else match lang.lang_of(p) {
+      some(lg) => {
+        let abs = w.root + "/" + p
+        let (ff, fn_list) = scan.file_fact(resolve.box_of(p, dirs), p, snapshot.text_of(w, p), lg, probe.symbols(abs)!, probe.tags(abs)!)
+        list.push(fs, ff)
+        for f in fn_list { list.push(funcs, f) }
+      },
+      none => match lang.unsupported_lang(p) {
+        some(l) => list.push(unsupported, (p, l)),
+        none => (),
+      },
+    }
+  }
+  ok(gathered.Gathered { facts: fs, funcs: funcs, unsupported: unsupported })
+}
+
+mod fn cards_on_disk(w: snapshot.World) -> List[String] =
+  list.filter(w.paths, (p) => (p == "box.yaml" or string.ends_with(p, "/box.yaml")) and not lang.is_test(p))
+
+mod fn atlas_findings(a: atlas.Atlas, w: snapshot.World) -> List[finding.Finding] = {
+  let listed = list.map(a.boxes, ((n, p)) => p)
+  list.filter(cards_on_disk(w), (p) => not list.contains(listed, p))
+    |> list.map((p) => finding.warn("atlas", "", p, "地図に無い札"))
+}
+
+effect fn eye(root: String, range: String, with_commit: Bool) -> Result[List[finding.Finding], String] = {
+  let w = read_world(root)!
+  let l = load_all(w)!
+  let g = gather(w, l.dirs)!
+  let th = thresholds.with_overrides(l.atlas.eye)
+  let base = run.run_checks(g.facts, g.funcs, l.cards, l.dirs, th, g.unsupported) + atlas_findings(l.atlas, w)
+  let all = if with_commit then base + run.run_commit(git.changed(root, range)!, git.subject(root)!, l.dirs, th) else base
+  ok(exceptions.apply(all, l.atlas.exceptions, today.now()!))
+}
+
+mod fn top_dirs(w: snapshot.World) -> List[(String, String)] =
+  list.filter_map(w.paths, (p) => option.map(string.index_of(p, "/"), (i) => string.slice(p, 0, i)))
+    |> list.sort |> list.dedup |> list.map((d) => (d, d))
+
+effect fn facts_only(root: String, auto: Bool) -> Result[gathered.Gathered, String] = {
+  let w = read_world(root)!
+  let dirs = if auto or not snapshot.has(w, ATLAS_FILE) then top_dirs(w) else load_all(w)!.dirs
+  gather(w, dirs)
+}
+
+effect fn atlas_diff(root: String) -> Result[(List[String], List[String]), String] = {
+  let w = read_world(root)!
+  let l = load_all(w)!
+  let listed = list.map(l.atlas.boxes, ((n, p)) => p)
+  let on_disk = cards_on_disk(w)
+  ok((list.filter(on_disk, (p) => not list.contains(listed, p)), list.filter(listed, (p) => not list.contains(on_disk, p))))
+}

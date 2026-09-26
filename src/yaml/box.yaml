@@ -1,0 +1,8 @@
+name: yaml
+role: meter
+knows: []
+surface: [Yaml, parse, is_noise, indent_of, line_at, is_item, strip_comment, unquote, split_kv, is_kv, block, table, value_of, nested, seq, item_of, inline_seq, inline_table, empty_table, empty_seq, get, entries, items, text, strs, get_str, get_strs]
+evidence:
+  tests: src/yaml/parse.almd
+state: nurtured
+note: 札と地図に要る形だけ読む。足りない形が出たら育てる

@@ -1,0 +1,17 @@
+// 語彙: 札。box.yaml 1 枚の値。
+import self.vocab.role
+import self.vocab.state
+
+type Card = {
+  name: String,
+  role: role.Role,
+  knows: List[String],
+  surface: List[String],
+  tests: String,
+  fake: String,
+  contract: String,
+  state: state.State,
+  closed_on: String,
+  external: String,
+  path: String,
+}

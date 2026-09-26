@@ -1,0 +1,21 @@
+// 六段を順に回す。
+import self.vocab.card
+import self.vocab.fnfact
+import self.vocab.filefact
+import self.vocab.finding
+import self.vocab.thresholds
+import self.checks.functions
+import self.checks.files
+import self.checks.imports
+import self.checks.effects
+import self.checks.surface
+import self.checks.commit
+import self.checks.coverage
+
+fn run_checks(fs: List[filefact.FileFact], funcs: List[fnfact.Func], cards: List[card.Card], dirs: List[(String, String)],
+              th: thresholds.Thresholds, unsupported: List[(String, String)]) -> List[finding.Finding] =
+  functions.check(funcs, th) + files.check(fs, th) + imports.check(fs, cards, dirs)
+    + effects.check(fs, cards) + surface.check(fs, cards, th) + coverage.check(fs, unsupported)
+
+fn run_commit(changed: List[String], subject: String, dirs: List[(String, String)], th: thresholds.Thresholds) -> List[finding.Finding] =
+  commit.check(changed, subject, dirs, th)

@@ -1,0 +1,33 @@
+// 写し: ファイルシステム。repo の中身を 1 回で読み、以後は値として扱う。
+import fs
+
+type World = { root: String, paths: List[String], texts: List[(String, String)] }
+
+mod fn rel_of(root: String, p: String) -> Option[String] = string.strip_prefix(p, root + "/")
+
+fn skipped(rel: String, skip: fn(String) -> Bool) -> Bool =
+  list.any(list.drop_end(string.split(rel, "/"), 1), skip)
+
+effect fn take(root: String, skip: fn(String) -> Bool, want_text: fn(String) -> Bool) -> Result[World, String] = {
+  var paths: List[String] = []
+  var texts: List[(String, String)] = []
+  for abs in list.sort(fs.walk(root)!) {
+    match rel_of(root, abs) {
+      none => (),
+      some(rel) =>
+        if skipped(rel, skip) or not fs.is_file(abs) then ()
+        else {
+          list.push(paths, rel)
+          if want_text(rel) then list.push(texts, (rel, fs.read_text(abs) ?? "")) else ()
+        },
+    }
+  }
+  ok(World { root: root, paths: paths, texts: texts })
+}
+
+fn text_of(w: World, rel: String) -> String =
+  option.map(list.find(w.texts, ((p, t)) => p == rel), ((p, t)) => t) ?? ""
+
+fn has(w: World, rel: String) -> Bool = list.contains(w.paths, rel)
+
+effect fn write(root: String, rel: String, text: String) -> Result[Unit, String] = fs.write(root + "/" + rel, text)

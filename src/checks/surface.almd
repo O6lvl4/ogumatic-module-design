@@ -1,0 +1,22 @@
+// 眼 5: 入口。公開は札が先。
+import self.vocab.role
+import self.vocab.card
+import self.vocab.filefact
+import self.vocab.finding
+import self.vocab.thresholds
+
+mod fn publics_of(fs: List[filefact.FileFact], box_name: String) -> List[String] =
+  list.flat_map(list.filter(fs, (f) => f.box_name == box_name and not f.is_test and f.graded), (f) => f.publics) |> list.sort |> list.dedup
+
+fn check(fs: List[filefact.FileFact], cards: List[card.Card], th: thresholds.Thresholds) -> List[finding.Finding] =
+  list.flat_map(cards, (c) => {
+    let have = publics_of(fs, c.name)
+    let extra = list.filter(have, (s) => not list.contains(c.surface, s))
+      |> list.map((s) => finding.fail("surface", c.name, c.path, s + " は札の surface に無い"))
+    let missing = if list.is_empty(have) then []
+      else list.filter(c.surface, (s) => not list.contains(have, s))
+        |> list.map((s) => finding.warn("surface", c.name, c.path, "surface の " + s + " が実体に無い"))
+    let wide = if role.is_facade(c.role) and list.len(c.surface) > th.surface_max
+      then [finding.fail("surface", c.name, c.path, "facade の入口が " + int.to_string(list.len(c.surface)) + " 本（上限 " + int.to_string(th.surface_max) + "）")] else []
+    extra + missing + wide
+  })

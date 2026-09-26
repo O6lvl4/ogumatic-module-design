@@ -1,0 +1,23 @@
+// 眼 1: 関数。
+import self.vocab.fnfact
+import self.vocab.finding
+import self.vocab.thresholds
+
+fn check(funcs: List[fnfact.Func], th: thresholds.Thresholds) -> List[finding.Finding] =
+  list.flat_map(list.filter(funcs, (f) => not f.is_test), (f) => {
+    let loc = f.file + ":" + int.to_string(f.line)
+    let a = if f.length > th.function_max
+      then [finding.fail("function", f.box_name, loc, f.name + " が " + int.to_string(f.length) + " 行（上限 " + int.to_string(th.function_max) + "）")] else []
+    let b = if f.params >= th.params_warn then [finding.warn("function", f.box_name, loc, f.name + " の引数が " + int.to_string(f.params))] else []
+    let c = if f.nesting >= th.nesting_warn then [finding.warn("function", f.box_name, loc, f.name + " のネストが " + int.to_string(f.nesting))] else []
+    a + b + c
+  })
+
+test "long function fails, wide one warns" {
+  let th = thresholds.defaults()
+  let long = fnfact.Func { box_name: "b", file: "f", name: "x", line: 1, length: 40, params: 1, nesting: 1, public: true, is_test: false }
+  let wide = fnfact.Func { box_name: "b", file: "f", name: "y", line: 1, length: 5, params: 5, nesting: 1, public: true, is_test: false }
+  let out = check([long, wide], th)
+  assert_eq(list.len(list.filter(out, finding.is_fail)), 1)
+  assert_eq(list.len(out), 2)
+}

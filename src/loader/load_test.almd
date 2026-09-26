@@ -1,0 +1,26 @@
+import self.vocab.role
+import self.vocab.state
+import self.vocab.card
+import self.vocab.atlas
+import self.loader.load
+
+fn blank() -> card.Card = card.Card { name: "", role: role.Meter, knows: [], surface: [], tests: "", fake: "", contract: "", state: state.Open, closed_on: "", external: "", path: "" }
+
+test "card" {
+  let c = load.load_card("name: store\nrole: mirror\nexternal: s3\nknows: []\nsurface: [Storage, NewS3]\nevidence: {tests: t.go, fake: fake.go, contract: c.go}\nstate: closed\nclosed_on: 2026-06-02\n", "store/box.yaml") ?? blank()
+  assert_eq(c.name, "store")
+  assert_eq(role.role_name(c.role), "mirror")
+  assert_eq(c.fake, "fake.go")
+  assert_eq(c.path, "store")
+  assert_eq(c.closed_on, "2026-06-02")
+}
+test "card errors" {
+  assert_eq(result.is_err(load.load_card("name: x\nrole: layer\nknows: []\nsurface: []\nevidence: {}\nstate: open\n", "x/box.yaml")), true)
+}
+test "atlas" {
+  let a = load.load_atlas("ogumatic: v0.2.0\nboxes:\n  model: model/box.yaml\neye:\n  file_max: 150\nexceptions:\n  - box: report\n    check: function\n    reason: r\n    until: 2099-01-01\n") ?? atlas.Atlas { version: "", boxes: [], nurtured: [], eye: [], exceptions: [] }
+  assert_eq(a.version, "v0.2.0")
+  assert_eq(list.len(a.boxes), 1)
+  assert_eq(a.eye, [("file_max", 150)])
+  assert_eq(option.map(list.first(a.exceptions), (e) => e.until) ?? "", "2099-01-01")
+}

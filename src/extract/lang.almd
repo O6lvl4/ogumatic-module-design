@@ -1,0 +1,74 @@
+// 計器: 言語の規則表。言語を知るのはこの箱だけ。
+
+fn ext_of(path: String) -> String = {
+  let base = match string.last_index_of(path, "/") { some(i) => string.drop(path, i + 1), none => path }
+  match string.last_index_of(base, ".") { some(i) => string.drop(base, i + 1), none => "" }
+}
+
+// gramide が読める言語
+fn lang_of(path: String) -> Option[String] = match ext_of(path) {
+  "go" => some("go"),
+  "rs" => some("rust"),
+  "py" => some("python"),
+  "pyi" => some("python"),
+  "almd" => some("almide"),
+  _ => none,
+}
+
+// ソースではあるが抽出器の無い言語（告げるだけ）
+fn unsupported_lang(path: String) -> Option[String] = match ext_of(path) {
+  "ts" => some("ts"), "tsx" => some("ts"), "js" => some("js"), "jsx" => some("js"), "mjs" => some("js"),
+  "swift" => some("swift"), "m" => some("objc"), "kt" => some("kotlin"), "java" => some("java"),
+  "dart" => some("dart"), "rb" => some("ruby"),
+  _ => none,
+}
+
+fn skip_dir(seg: String) -> Bool =
+  string.starts_with(seg, ".") or list.contains(
+    ["node_modules", "vendor", "target", "dist", "build", "Pods", "Carthage", "__pycache__", "coverage", "venv", "out", "generated"], seg)
+
+fn plumbing(name: String) -> Bool = list.contains(["mod.almd", "main.almd", "__init__.py", "__main__.py", "mod.rs"], name)
+
+fn base_of(path: String) -> String = match string.last_index_of(path, "/") { some(i) => string.drop(path, i + 1), none => path }
+
+fn is_test(path: String) -> Bool = {
+  let segs = string.split(path, "/")
+  let dirs = list.drop_end(segs, 1)
+  let b = base_of(path)
+  let test_dir = list.any(dirs, (d) => list.contains(["tests", "test", "__tests__", "spec", "specs", "Tests", "Test", "e2e", "testdata", "fixtures"], d))
+  let test_name = string.ends_with(b, "_test.go") or string.ends_with(b, "_test.py") or string.ends_with(b, "_test.almd")
+    or string.ends_with(b, "_test.rs") or string.ends_with(b, ".test.ts") or string.ends_with(b, ".spec.ts")
+    or string.ends_with(b, "Tests.swift") or string.ends_with(b, "Test.swift") or string.ends_with(b, "TestCase.m")
+    or (string.starts_with(b, "test_") and string.ends_with(b, ".py"))
+  test_dir or test_name
+}
+
+fn indent_unit(lang: String) -> Int = match lang { "go" => 1, "almide" => 2, _ => 4 }
+
+// 副作用と見なす呼び出しの接頭辞
+fn effect_calls(lang: String) -> List[String] = match lang {
+  "go" => ["os.", "exec.", "http.", "net.", "ioutil.", "sql.", "time.Now", "rand.", "syscall."],
+  "rust" => ["fs::", "std::fs", "env::", "std::env", "process::", "std::process", "net::", "std::net", "SystemTime", "Instant::now", "reqwest", "tokio::fs", "rand::"],
+  "python" => ["open", "os.", "subprocess.", "socket.", "shutil.", "requests.", "urllib.", "time.time", "datetime.now", "random."],
+  "almide" => ["fs.", "process.", "env.", "http.", "io.", "random.", "datetime.now", "datetime.monotonic"],
+  _ => [],
+}
+
+// 副作用と見なす import
+fn effect_imports(lang: String) -> List[String] = match lang {
+  "go" => ["os", "os/exec", "net", "net/http", "io/ioutil", "database/sql", "syscall", "math/rand"],
+  "rust" => ["std::fs", "std::env", "std::process", "std::net", "reqwest", "tokio::fs"],
+  "python" => ["os", "subprocess", "socket", "shutil", "requests", "urllib", "random", "time"],
+  "almide" => ["fs", "process", "env", "http", "io", "random"],
+  _ => [],
+}
+
+fn is_public(lang: String, name: String, line: String, owner: String) -> Bool =
+  if owner != "" then false
+  else match lang {
+    "go" => string.is_upper(string.get(name, 0) ?? ""),
+    "rust" => string.contains(line, "pub "),
+    "python" => not string.starts_with(name, "_"),
+    "almide" => not string.starts_with(string.trim(line), "mod ") and not string.starts_with(name, "_"),
+    _ => false,
+  }

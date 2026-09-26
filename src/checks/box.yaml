@@ -1,0 +1,8 @@
+name: checks
+role: meter
+knows: [vocab, extract]
+surface: [segments, score_of, resolve, box_of, check, apply, run_checks, run_commit]
+evidence:
+  tests: src/checks
+state: nurtured
+note: 六段の規則が増える場所

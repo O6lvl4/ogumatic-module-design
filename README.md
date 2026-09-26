@@ -74,7 +74,7 @@ mindmap
 | 語彙 | 日英対訳 | [docs/glossary.md](docs/glossary.md) |
 | スキーマ | 札と地図の JSON Schema | [schema/](schema/) |
 | 雛形 | CLAUDE.md・札・地図 | [templates/](templates/) |
-| 検査器 | 言語別（段階 1 以降） | [eye/](eye/) |
+| 眼の実装 | Almide。`almide install github.com/O6lvl4/ogumatic-module-design` | [src/](src/) |
 | skill | Claude Code から `/ogumatic` | [skill/](skill/) |
 
 ## 状態
@@ -82,7 +82,8 @@ mindmap
 | 版 | 内容 |
 | --- | --- |
 | v0.1.0 | 抽象段階。文書・スキーマ・雛形・skill |
-| v0.2.0 | 眼。言語非依存の中核＋正規表現の抽出器（Go・TS/JS・Rust・Python・Swift・ObjC・Kotlin・Java・Dart・Ruby）。`uvx --from git+https://github.com/O6lvl4/ogumatic-module-design ogumatic eye .` |
+| v0.2.0 | 眼の試作（Python、正規表現）。閉じて再生成した |
+| v0.3.0 | 眼を Almide で再生成。抽出器は gramide（Go・Rust・Python・Almide）。`almide install github.com/O6lvl4/ogumatic-module-design` → `ogumatic eye .` |
 
 ## 由来
 

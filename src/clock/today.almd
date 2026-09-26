@@ -1,0 +1,4 @@
+// 写し: 時計。
+import datetime
+
+effect fn now() -> Result[String, String] = ok(string.take(datetime.to_iso(datetime.now()), 10))

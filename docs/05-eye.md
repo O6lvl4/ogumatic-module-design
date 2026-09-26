@@ -27,11 +27,14 @@
 
 ## 作り
 
+眼は Almide で書く。言語に依存しない中核と、gramide（Almide 製の構文木の読み手）を写した抽出器に分ける。中核は**事実（facts）**だけを見る。
+
 ```mermaid
 flowchart LR
   code[("コード")]
   cards[("box.yaml<br/>ogumatic.yaml")]
-  fsmirror["fsmirror（写し）<br/>fs・git・時計"]
+  fsmirror["fsmirror（写し）<br/>fs"]
+  gramide["gramide（写し）<br/>symbols・tags"]
   loader["loader（翻訳）<br/>YAML → 札・地図"]
   extract["extract（計器）<br/>言語を知る唯一の箱"]
   world["札・地図"]
@@ -42,43 +45,59 @@ flowchart LR
 
   code --> fsmirror
   cards --> fsmirror
+  code --> gramide
   fsmirror --> loader --> world
-  fsmirror --> extract --> facts
+  fsmirror --> extract
+  gramide --> extract --> facts
   world --> checks
   facts --> checks
   checks --> findings --> cli
-
-  classDef m fill:#1f2933,stroke:#8d99a4,color:#f2f4f6
-  classDef k fill:#1f2933,stroke:#f2c14e,color:#f2f4f6
-  class fsmirror m
-  class loader,extract,checks,cli k
 ```
 
-眼は言語に依存しない中核と、言語ごとの薄い抽出器に分ける。中核は**事実（facts）**だけを見る。
-
-```
-repo ──抽出器（言語ごと）──▶ facts ──中核──▶ 落とす / 告げる
-       ▲                      ▲
-       │                      └ 言語を知らない。関数・ファイル・import・副作用・公開の事実だけ
-       └ 言語を知る唯一の場所。正規表現でも tree-sitter でもよい
-```
-
-| 事実 | 項目 |
+| 事実 | 出どころ |
 | --- | --- |
-| 関数 | 箱・ファイル・名前・開始行・行数・引数の数・ネスト・公開か |
-| ファイル | 箱・パス・言語・行数・型の名前・公開シンボル・import 文・副作用の出現（行と原語）・テストか |
-| 変更 | 触ったファイル・件名（git から） |
+| 関数（名前・行範囲・引数・ネスト・公開） | `gramide symbols` の行範囲。引数と入れ子は署名と字下げから |
+| 型 | `gramide symbols` の kind が type / class のもの |
+| import | 各言語の import 行 |
+| 副作用 | `gramide tags` の `ref call` と、副作用のある import |
+| 変更 | git |
 
-抽出器の契約は「テキストと言語名を受けて事実を返す」だけ。精度の低い正規表現の抽出器から始め、言語ごとに tree-sitter の抽出器へ差し替えられる。差し替えても中核と札は変わらない。
+gramide が読み切れないファイルは測らず「読み切れない」と告げる。codopsy-almd と同じ規則で、部分的に読んだ数字は数字ではない。
+gramide に文法の無い言語（TS・Swift・Kotlin など）はファイルごとに「抽出器が無い」と告げ、その言語は測らない。gramide に文法が増えたら `src/extract/lang.almd` に 1 行足す。
+
+## 使い方
+
+```
+almide install github.com/O6lvl4/ogumatic-module-design   # ~/.local/bin/ogumatic
+almide install github.com/O6lvl4/gramide-cli               # 抽出器が呼ぶ gramide
+
+ogumatic eye .                          # 六段。落とすが 1 件でもあれば exit 1
+ogumatic eye . --range HEAD~1..HEAD     # コミットの段も
+ogumatic facts . --auto                 # 札が無くても事実だけ出す
+ogumatic atlas .                        # box.yaml と地図の差
+```
+
+## 眼の箱（自分に自分の眼を当てる）
+
+| 箱 | 役 | 何をするか |
+| --- | --- | --- |
+| `vocab` | vocabulary | Card・Atlas・Func・FileFact・Finding・閾値・役の表 |
+| `yaml` | meter | YAML の部分集合を読む |
+| `loader` | translator | YAML を札と地図に直す |
+| `extract` | meter | テキストと gramide の出力から事実を出す。言語の規則表を持つ |
+| `checks` | meter | 事実と札から六段の判定を出す |
+| `fsmirror` `gitmirror` `gramide` `clock` | mirror | 外界 4 つ。それぞれ偽物と契約テストを同居 |
+| `registry` | registry | 写しと計器を列挙し組み立てる唯一の場所 |
+| `cli` | facade | `eye` `facts` `atlas` の 3 入口 |
 
 ## 言語への写像（抽出器の規則表）
 
-| 段 | 何を「関数」「型」「import」「副作用」「公開」と見なすか |
-| --- | --- |
-| Go | func / type / import path / `os` `net` `io` `time.Now` `os/exec` `math/rand` / 大文字始まり |
-| TypeScript | function・メソッド・arrow / class・interface・type・enum / import 文 / `node:fs` `child_process` `fetch` `Date.now` `crypto.random*` / `export` |
-| Rust | fn / struct・enum・trait / `use` と Cargo の path 依存 / `std::fs` `std::net` `std::process` `std::env` `SystemTime` `rand` / `pub` |
-| Swift | func・init / class・struct・enum・protocol（extension は本体に帰属） / import と target 依存 / `FileManager` `URLSession` `Date()` `ProcessInfo` / `public` `open` |
-| Python | def / class / import / `os` `subprocess` `socket` `time` `random` / `_` で始まらない |
+| 言語 | 抽出器 | 副作用の呼び出し | 公開 |
+| --- | --- | --- | --- |
+| Go | gramide-go | `os.` `exec.` `http.` `net.` `time.Now` `rand.` と `"os"` などの import | 大文字始まり |
+| Rust | gramide-rust | `std::fs` `std::env` `std::process` `SystemTime` `reqwest` `tokio::fs` | 行に `pub ` |
+| Python | gramide-python | `open` `os.` `subprocess.` `socket.` `requests.` `time.time` `random.` | `_` で始まらない |
+| Almide | gramide-almide | `fs.` `process.` `env.` `http.` `io.` `random.` `datetime.now` | `mod` でない |
+| TS / JS / Swift / ObjC / Kotlin / Java / Dart / Ruby | 無し | 「抽出器が無い」と告げる | — |
 
 コミットの段は言語に依らず git で測る。

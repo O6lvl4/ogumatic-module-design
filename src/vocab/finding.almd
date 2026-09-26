@@ -1,0 +1,29 @@
+// 語彙: 眼の判定 1 件。
+import self.vocab.level
+
+type Finding = { check: String, box_name: String, location: String, message: String, level: level.Level }
+
+fn fail(check: String, box_name: String, location: String, message: String) -> Finding =
+  Finding { check: check, box_name: box_name, location: location, message: message, level: level.Fail }
+
+fn warn(check: String, box_name: String, location: String, message: String) -> Finding =
+  Finding { check: check, box_name: box_name, location: location, message: message, level: level.Warn }
+
+fn is_fail(f: Finding) -> Bool = level.is_fail_level(f.level)
+
+fn line(f: Finding) -> String =
+  level.level_name(f.level) + " " + string.pad_end(f.check, 8, " ") + " "
+    + string.pad_end(if f.box_name == "" then "-" else f.box_name, 10, " ") + " " + f.location + "  " + f.message
+
+fn sort_key(f: Finding) -> String =
+  (if is_fail(f) then "0" else "1") + f.check + "|" + f.box_name + "|" + f.location + "|" + f.message
+
+fn to_json(f: Finding) -> String =
+  "{\"level\":\"" + level.level_name(f.level) + "\",\"check\":\"" + f.check + "\",\"box\":\"" + f.box_name
+    + "\",\"location\":\"" + f.location + "\",\"message\":\"" + string.replace(f.message, "\"", "'") + "\"}"
+
+test "line and key" {
+  let f = fail("import", "cli", "cli/main.go", "x")
+  assert_eq(string.starts_with(line(f), "FAIL import"), true)
+  assert_eq(string.starts_with(sort_key(warn("file", "a", "b", "c")), "1file"), true)
+}

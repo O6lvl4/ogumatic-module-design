@@ -1,0 +1,8 @@
+import env
+import process
+import self.cli.cli
+
+effect fn main() -> Unit = {
+  let code = cli.run(env.args()) ?? 2
+  process.exit(code)
+}

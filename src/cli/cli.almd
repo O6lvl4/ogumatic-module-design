@@ -1,0 +1,102 @@
+// 顔: eye / facts / atlas の 3 本。
+import self.registry.registry
+import self.vocab.gathered
+import self.vocab.finding
+
+let USAGE = """
+ogumatic — Ogumatic Module Design の眼
+
+  ogumatic eye   [path] [--range HEAD~1..HEAD] [--json]   六段を回す。落とすが 1 件でもあれば exit 1
+  ogumatic facts [path] [--auto]                          事実だけを出す。札が無くても動く
+  ogumatic atlas [path]                                   box.yaml と地図の差を出す
+"""
+
+type Args = { cmd: String, path: String, range: String, as_json: Bool, auto: Bool }
+
+mod fn parse_args(argv: List[String]) -> Args = {
+  var a = Args { cmd: list.get(argv, 0) ?? "", path: ".", range: "", as_json: false, auto: false }
+  var i = 1
+  while i < list.len(argv) {
+    let x = list.get(argv, i) ?? ""
+    if x == "--json" then a = Args { cmd: a.cmd, path: a.path, range: a.range, as_json: true, auto: a.auto }
+    else if x == "--auto" then a = Args { cmd: a.cmd, path: a.path, range: a.range, as_json: a.as_json, auto: true }
+    else if x == "--range" then { a = Args { cmd: a.cmd, path: a.path, range: list.get(argv, i + 1) ?? "", as_json: a.as_json, auto: a.auto }; i = i + 1 }
+    else a = Args { cmd: a.cmd, path: x, range: a.range, as_json: a.as_json, auto: a.auto }
+    i = i + 1
+  }
+  a
+}
+
+mod effect fn run_eye(a: Args) -> Result[Int, String] = match registry.eye(a.path, a.range, a.range != "") {
+  err(e) => { eprintln("ERROR " + e); ok(2) },
+  ok(found) => {
+    let sorted = list.sort_by(found, finding.sort_key)
+    if a.as_json then println("[" + list.join(list.map(sorted, finding.to_json), ",") + "]")
+    else for f in sorted { println(finding.line(f)) }
+    let fails = list.count(sorted, finding.is_fail)
+    println("--- 落とす " + int.to_string(fails) + " / 告げる " + int.to_string(list.len(sorted) - fails))
+    ok(if fails > 0 then 1 else 0)
+  },
+}
+
+mod fn median(xs: List[Int]) -> Int = {
+  let s = list.sort(xs)
+  list.get(s, list.len(s) / 2) ?? 0
+}
+
+mod fn p90(xs: List[Int]) -> Int = {
+  let s = list.sort(xs)
+  list.get(s, (list.len(s) * 9) / 10) ?? 0
+}
+
+mod fn pad(s: String, n: Int) -> String = string.pad_start(s, n, " ")
+
+mod fn row(g: gathered.Gathered, box_name: String) -> String = {
+  let ff = list.filter(g.facts, (f) => f.box_name == box_name)
+  let lens = list.map(list.filter(g.funcs, (f) => f.box_name == box_name), (f) => f.length)
+  let publics = list.flat_map(ff, (f) => f.publics) |> list.sort |> list.dedup
+  string.pad_end(if box_name == "" then "(箱の外)" else box_name, 18, " ")
+    + pad(int.to_string(list.len(ff)), 6) + pad(int.to_string(list.sum(list.map(ff, (f) => f.lines))), 7)
+    + pad(int.to_string(list.len(lens)), 6) + pad(int.to_string(median(lens)), 6) + pad(int.to_string(p90(lens)), 6)
+    + pad(int.to_string(list.sum(list.map(ff, (f) => list.len(f.types)))), 6) + pad(int.to_string(list.len(publics)), 7)
+    + pad(int.to_string(list.sum(list.map(ff, (f) => list.len(f.effects)))), 7)
+}
+
+mod effect fn run_facts(a: Args) -> Result[Int, String] = match registry.facts_only(a.path, a.auto) {
+  err(e) => { eprintln("ERROR " + e); ok(2) },
+  ok(g) => {
+    println(string.pad_end("箱", 18, " ") + pad("files", 6) + pad("lines", 7) + pad("funcs", 6) + pad("f_med", 6) + pad("f_p90", 6) + pad("types", 6) + pad("public", 7) + pad("effect", 7))
+    let boxes = list.map(g.facts, (f) => f.box_name) |> list.sort |> list.dedup
+    for b in boxes { println(row(g, b)) }
+    for (p, l) in g.unsupported { eprintln(p + ": 抽出器が無い（" + l + "）") }
+    ok(0)
+  },
+}
+
+mod effect fn run_atlas(a: Args) -> Result[Int, String] = match registry.atlas_diff(a.path) {
+  err(e) => { eprintln("ERROR " + e); ok(2) },
+  ok((missing, gone)) => {
+    for p in missing { println("地図に無い札: " + p) }
+    for p in gone { println("札が無い: " + p) }
+    if list.is_empty(missing) and list.is_empty(gone) then println("地図と札は一致") else ()
+    ok(if list.is_empty(gone) then 0 else 1)
+  },
+}
+
+effect fn run(argv: List[String]) -> Result[Int, String] = {
+  let a = parse_args(argv)
+  match a.cmd {
+    "eye" => run_eye(a),
+    "facts" => run_facts(a),
+    "atlas" => run_atlas(a),
+    _ => { println(USAGE); ok(2) },
+  }
+}
+
+test "args" {
+  let a = parse_args(["eye", "spec/mixed", "--range", "HEAD~1..HEAD", "--json"])
+  assert_eq(a.cmd, "eye")
+  assert_eq(a.path, "spec/mixed")
+  assert_eq(a.range, "HEAD~1..HEAD")
+  assert_eq(a.as_json, true)
+}

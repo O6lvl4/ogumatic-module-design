@@ -1,0 +1,10 @@
+// 契約テスト: 本物の形と偽物の形が同じ。
+import self.gitmirror.git
+import self.gitmirror.fakegit
+
+test "subject is one line for both" {
+  let real = git.subject(".") ?? ""
+  assert_eq(string.contains(real, "\n"), false)
+  assert_eq(string.contains(fakegit.subject("x"), "\n"), false)
+  assert_eq(list.len(fakegit.changed(["a", "b"])), 2)
+}

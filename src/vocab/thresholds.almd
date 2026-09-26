@@ -1,0 +1,36 @@
+// 語彙: 眼の閾値。地図の eye: で上書きできる。
+
+type Thresholds = {
+  function_max: Int,
+  params_warn: Int,
+  nesting_warn: Int,
+  file_max: Int,
+  file_warn: Int,
+  surface_max: Int,
+  commit_boxes_max: Int,
+}
+
+fn defaults() -> Thresholds = Thresholds {
+  function_max: 30, params_warn: 4, nesting_warn: 4, file_max: 120, file_warn: 80, surface_max: 4, commit_boxes_max: 2,
+}
+
+fn pick(pairs: List[(String, Int)], key: String, d: Int) -> Int =
+  option.map(list.find(pairs, ((k, v)) => k == key), ((k, v)) => v) ?? d
+
+fn with_overrides(pairs: List[(String, Int)]) -> Thresholds = {
+  let d = defaults()
+  Thresholds {
+    function_max: pick(pairs, "function_max", d.function_max),
+    params_warn: pick(pairs, "params_warn", d.params_warn),
+    nesting_warn: pick(pairs, "nesting_warn", d.nesting_warn),
+    file_max: pick(pairs, "file_max", d.file_max),
+    file_warn: pick(pairs, "file_warn", d.file_warn),
+    surface_max: pick(pairs, "surface_max", d.surface_max),
+    commit_boxes_max: pick(pairs, "commit_boxes_max", d.commit_boxes_max),
+  }
+}
+
+test "override one" {
+  assert_eq(with_overrides([("file_max", 150)]).file_max, 150)
+  assert_eq(with_overrides([("file_max", 150)]).function_max, 30)
+}

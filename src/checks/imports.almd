@@ -1,0 +1,34 @@
+// 眼 3: import。札の knows と役の表。
+import self.vocab.role
+import self.vocab.card
+import self.vocab.filefact
+import self.vocab.finding
+import self.checks.resolve
+
+mod fn find_card(cards: List[card.Card], name: String) -> Option[card.Card] = list.find(cards, (c) => c.name == name)
+
+mod fn file_imports(f: filefact.FileFact, c: card.Card, dirs: List[(String, String)]) -> List[finding.Finding] =
+  list.flat_map(f.imports, (imp) => {
+    let (name, tie) = resolve.resolve(imp, dirs)
+    match name {
+      none => [],
+      some(n) =>
+        if n == f.box_name then []
+        else if not list.contains(c.knows, n) then [finding.fail("import", f.box_name, f.path, imp + " → " + n + " は札の knows に無い")]
+        else if tie then [finding.warn("import", f.box_name, f.path, imp + " の解決が曖昧（" + n + " と判定）")]
+        else [],
+    }
+  })
+
+mod fn knows_vs_roles(c: card.Card, cards: List[card.Card]) -> List[finding.Finding] =
+  list.flat_map(c.knows, (k) => match find_card(cards, k) {
+    none => [finding.warn("import", c.name, c.path, "knows の " + k + " は地図に無い")],
+    some(o) => if role.may_know(c.role, o.role) then []
+      else [finding.warn("import", c.name, c.path, role.role_name(c.role) + " が " + role.role_name(o.role) + "（" + k + "）を知るのは役の表に無い")],
+  })
+
+fn check(fs: List[filefact.FileFact], cards: List[card.Card], dirs: List[(String, String)]) -> List[finding.Finding] = {
+  let per_file = list.flat_map(list.filter(fs, (f) => f.box_name != "" and not f.is_test), (f) =>
+    match find_card(cards, f.box_name) { some(c) => file_imports(f, c, dirs), none => [] })
+  per_file + list.flat_map(cards, (c) => knows_vs_roles(c, cards))
+}

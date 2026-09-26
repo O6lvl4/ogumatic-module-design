@@ -1,0 +1,10 @@
+name: gramide
+role: mirror
+external: gramide (syntax trees)
+knows: []
+surface: [symbols, tags]
+evidence:
+  tests: src/gramide/probe_test.almd
+  fake: fakeprobe.almd
+  contract: src/gramide/probe_test.almd
+state: open

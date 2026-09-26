@@ -1,0 +1,8 @@
+// 語彙: 判定の重さ。落とす / 告げる。
+
+type Level =
+  | Fail
+  | Warn
+
+fn level_name(l: Level) -> String = match l { Fail => "FAIL", Warn => "WARN" }
+fn is_fail_level(l: Level) -> Bool = match l { Fail => true, Warn => false }

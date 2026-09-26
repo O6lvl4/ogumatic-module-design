@@ -1,2 +1,0 @@
-[console_scripts]
-ogumatic = ogumatic_eye.cli.cli:main

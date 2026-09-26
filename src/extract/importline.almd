@@ -1,0 +1,55 @@
+// 計器: import 行を読む。言語ごとの形だけ。
+
+fn cut_at(s: String, sep: String) -> String = match string.index_of(s, sep) {
+  some(i) => string.trim(string.slice(s, 0, i)),
+  none => string.trim(s),
+}
+
+fn quoted(t: String) -> Option[String] = match string.index_of(t, "\"") {
+  some(a) => {
+    let rest = string.drop(t, a + 1)
+    option.map(string.index_of(rest, "\""), (b) => string.slice(rest, 0, b))
+  },
+  none => none,
+}
+
+fn go_imports(lines: List[String]) -> List[String] = {
+  var out: List[String] = []
+  var inblock = false
+  for l in lines {
+    let t = string.trim(l)
+    if t == "import (" then inblock = true
+    else if inblock and t == ")" then inblock = false
+    else if inblock or string.starts_with(t, "import ") then
+      match quoted(t) { some(s) => list.push(out, s), none => () }
+    else ()
+  }
+  out
+}
+
+fn rust_import(t: String) -> Option[String] = {
+  let body = if string.starts_with(t, "use ") then some(string.drop(t, 4))
+    else if string.starts_with(t, "pub use ") then some(string.drop(t, 8))
+    else if string.starts_with(t, "pub(crate) use ") then some(string.drop(t, 15))
+    else none
+  option.map(body, (s) => string.strip_suffix(cut_at(cut_at(s, ";"), "{"), "::") ?? cut_at(cut_at(s, ";"), "{"))
+}
+
+fn py_import(t: String) -> Option[String] =
+  if string.starts_with(t, "import ") then some(cut_at(cut_at(string.drop(t, 7), ","), " "))
+  else if string.starts_with(t, "from ") then some(cut_at(string.drop(t, 5), " "))
+  else none
+
+fn almd_import(t: String) -> Option[String] =
+  if string.starts_with(t, "import ") then some(cut_at(string.drop(t, 7), " ")) else none
+
+fn imports_of(lang: String, text: String) -> List[String] = {
+  let lines = string.lines(text)
+  match lang {
+    "go" => go_imports(lines),
+    "rust" => list.filter_map(lines, (l) => rust_import(string.trim(l))),
+    "python" => list.filter_map(lines, (l) => py_import(string.trim(l))),
+    "almide" => list.filter_map(lines, (l) => almd_import(string.trim(l))),
+    _ => [],
+  }
+}

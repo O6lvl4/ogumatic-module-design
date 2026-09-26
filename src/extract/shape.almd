@@ -1,0 +1,74 @@
+// 計器: 署名と字下げから関数の形（引数の数・入れ子）を測る。言語を知らない。
+
+mod fn bare(name: String) -> String = {
+  let a = match string.last_index_of(name, "::") { some(i) => string.drop(name, i + 2), none => name }
+  match string.last_index_of(a, ".") { some(i) => string.drop(a, i + 1), none => a }
+}
+
+mod fn take_balanced(s: String, depth: Int, acc: String) -> String =
+  if string.is_empty(s) then acc
+  else {
+    let c = string.take(s, 1)
+    let rest = string.drop(s, 1)
+    if c == ")" and depth == 0 then acc
+    else if c == "(" or c == "[" or c == "{" or c == "<" then take_balanced(rest, depth + 1, acc + c)
+    else if c == ")" or c == "]" or c == "}" or c == ">" then take_balanced(rest, depth - 1, acc + c)
+    else take_balanced(rest, depth, acc + c)
+  }
+
+mod fn count_top_commas(s: String, depth: Int, n: Int) -> Int =
+  if string.is_empty(s) then n
+  else {
+    let c = string.take(s, 1)
+    let rest = string.drop(s, 1)
+    if c == "(" or c == "[" or c == "{" or c == "<" then count_top_commas(rest, depth + 1, n)
+    else if c == ")" or c == "]" or c == "}" or c == ">" then count_top_commas(rest, depth - 1, n)
+    else if c == "," and depth == 0 then count_top_commas(rest, depth, n + 1)
+    else count_top_commas(rest, depth, n)
+  }
+
+// 署名の括弧の中身。名前の直後の "(" から対応する ")" まで。数行にまたがってよい。
+mod fn signature_inside(lines: List[String], start: Int, name: String) -> String = {
+  let sig = string.join(list.slice(lines, start - 1, int.min(list.len(lines), start + 7)), " ")
+  let from = option.map(string.index_of(sig, bare(name)), (i) => i + string.len(bare(name))) ?? 0
+  let tail = string.drop(sig, from)
+  match string.index_of(tail, "(") {
+    some(p) => take_balanced(string.drop(tail, p + 1), 0, ""),
+    none => "",
+  }
+}
+
+fn params_of(lines: List[String], start: Int, name: String) -> Int = {
+  let inside = string.trim(signature_inside(lines, start, name))
+  if inside == "" then 0
+  else {
+    let n = count_top_commas(inside, 0, 0) + 1
+    let selfish = string.starts_with(inside, "self") or string.starts_with(inside, "&self") or string.starts_with(inside, "&mut self") or string.starts_with(inside, "cls")
+    if selfish then n - 1 else n
+  }
+}
+
+fn indent_of(l: String) -> Int = string.len(l) - string.len(string.trim_start(l))
+
+// 直前の行がブロックを開いていれば、深くなった字下げは入れ子。開いていなければ継続行。
+mod fn opens_block(prev: String) -> Bool = {
+  let t = string.trim_end(prev)
+  string.ends_with(t, "{") or string.ends_with(t, ":") or string.ends_with(t, "then") or string.ends_with(t, "else")
+    or string.ends_with(t, "=>") or string.ends_with(t, "=") or string.ends_with(t, "do")
+}
+
+fn nesting_of(lines: List[String], start: Int, end: Int, unit: Int) -> Int = {
+  let base = indent_of(list.get(lines, start - 1) ?? "") / unit
+  let body = list.filter(list.slice(lines, start - 1, int.min(list.len(lines), end)), (l) => string.trim(l) != "")
+  var best = 0
+  var prev = ""
+  var prev_depth = 0
+  for l in body {
+    let depth = indent_of(l) / unit - base
+    let counted = if depth > prev_depth and not opens_block(prev) then prev_depth else depth
+    if counted > best then best = counted else ()
+    prev = l
+    prev_depth = counted
+  }
+  best
+}

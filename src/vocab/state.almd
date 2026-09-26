@@ -1,0 +1,19 @@
+// 語彙: 箱の状態。
+
+type State =
+  | Open
+  | Closed
+  | Nurtured
+
+fn state_name(s: State) -> String = match s {
+  Open => "open",
+  Closed => "closed",
+  Nurtured => "nurtured",
+}
+
+fn parse_state(s: String) -> Option[State] = match s {
+  "open" => some(Open),
+  "closed" => some(Closed),
+  "nurtured" => some(Nurtured),
+  _ => none,
+}

@@ -1,0 +1,7 @@
+name: cli
+role: facade
+knows: [registry, vocab]
+surface: [Args, run]
+evidence:
+  tests: src/cli/cli.almd
+state: open

@@ -1,0 +1,5 @@
+// 語彙: 抽出器が集めた事実の束。
+import self.vocab.fnfact
+import self.vocab.filefact
+
+type Gathered = { facts: List[filefact.FileFact], funcs: List[fnfact.Func], unsupported: List[(String, String)] }

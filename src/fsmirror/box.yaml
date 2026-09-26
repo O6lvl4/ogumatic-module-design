@@ -1,0 +1,10 @@
+name: fsmirror
+role: mirror
+external: filesystem
+knows: []
+surface: [World, skipped, take, text_of, has, write, world]
+evidence:
+  tests: src/fsmirror/snapshot_test.almd
+  fake: fakefs.almd
+  contract: src/fsmirror/snapshot_test.almd
+state: open

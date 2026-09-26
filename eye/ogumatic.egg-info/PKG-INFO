@@ -1,6 +1,0 @@
-Metadata-Version: 2.4
-Name: ogumatic
-Version: 0.2.0
-Summary: Ogumatic Module Design の眼。言語非依存の中核と正規表現の抽出器
-Requires-Python: >=3.10
-Requires-Dist: pyyaml>=6

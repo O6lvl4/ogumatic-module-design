@@ -1,0 +1,10 @@
+// 語彙: 地図。ogumatic.yaml の値。
+import self.vocab.exception
+
+type Atlas = {
+  version: String,
+  boxes: List[(String, String)],
+  nurtured: List[String],
+  eye: List[(String, Int)],
+  exceptions: List[exception.Exception],
+}

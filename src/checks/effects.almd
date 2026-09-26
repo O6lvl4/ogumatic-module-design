@@ -1,0 +1,23 @@
+// 眼 4: 副作用は mirror だけ。
+import self.vocab.role
+import self.vocab.card
+import self.vocab.filefact
+import self.vocab.finding
+
+mod fn words(f: filefact.FileFact) -> String =
+  list.map(f.effects, ((ln, w)) => w) |> list.sort |> list.dedup |> list.take(5) |> list.join(", ")
+
+mod fn first_line(f: filefact.FileFact) -> String =
+  option.map(list.first(f.effects), ((ln, w)) => int.to_string(ln)) ?? "0"
+
+fn check(fs: List[filefact.FileFact], cards: List[card.Card]) -> List[finding.Finding] =
+  list.flat_map(list.filter(fs, (f) => f.box_name != "" and not f.is_test and not list.is_empty(f.effects)), (f) =>
+    match list.find(cards, (c) => c.name == f.box_name) {
+      none => [],
+      some(c) => {
+        let loc = f.path + ":" + first_line(f)
+        if not role.is_mirror(c.role) then [finding.fail("effect", f.box_name, loc, role.role_name(c.role) + " の箱で副作用（" + words(f) + "）")]
+        else if c.fake != "" and string.ends_with(f.path, c.fake) then [finding.warn("effect", f.box_name, loc, "偽物が副作用に触れている（" + words(f) + "）")]
+        else []
+      },
+    })

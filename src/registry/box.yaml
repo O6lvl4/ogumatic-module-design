@@ -1,0 +1,7 @@
+name: registry
+role: registry
+knows: [vocab, loader, extract, checks, fsmirror, gitmirror, gramide, clock]
+surface: [read_world, load_all, gather, eye, facts_only, atlas_diff]
+evidence:
+  tests: src/registry/registry_test.almd
+state: open

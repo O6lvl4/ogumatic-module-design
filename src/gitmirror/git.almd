@@ -1,0 +1,17 @@
+// 写し: git。変更したファイルと件名だけ。
+import process
+
+mod fn lines_of(out: String) -> List[String] = list.filter(string.lines(out), (l) => l != "")
+
+mod effect fn diff(root: String, what: String) -> Result[List[String], String] =
+  ok(lines_of(process.exec("git", ["-C", root, "diff", "--name-only", "--relative", what]) ?? ""))
+
+effect fn changed(root: String, range: String) -> Result[List[String], String] =
+  if range != "" then diff(root, range)
+  else {
+    let staged = diff(root, "--cached")!
+    if list.is_empty(staged) then diff(root, "HEAD~1..HEAD") else ok(staged)
+  }
+
+effect fn subject(root: String) -> Result[String, String] =
+  ok(string.trim(process.exec("git", ["-C", root, "log", "-1", "--format=%s"]) ?? ""))

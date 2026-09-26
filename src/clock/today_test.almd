@@ -1,0 +1,10 @@
+// 契約テスト: 本物の日付が偽物と同じ形。
+import self.clock.today
+import self.clock.fakeclock
+
+test "today has the fake's shape" {
+  let t = today.now() ?? ""
+  assert_eq(string.len(t), 10)
+  assert_eq(string.get(t, 4) ?? "", "-")
+  assert_eq(string.len(fakeclock.now("2026-06-01")), 10)
+}

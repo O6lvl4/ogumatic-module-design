@@ -1,15 +1,14 @@
-ogumatic: v0.2.0
+ogumatic: v0.3.0
 boxes:
-  vocab:    eye/ogumatic_eye/vocab/box.yaml
-  fsmirror: eye/ogumatic_eye/fsmirror/box.yaml
-  loader:   eye/ogumatic_eye/loader/box.yaml
-  extract:  eye/ogumatic_eye/extract/box.yaml
-  checks:   eye/ogumatic_eye/checks/box.yaml
-  registry: eye/ogumatic_eye/registry/box.yaml
-  cli:      eye/ogumatic_eye/cli/box.yaml
-nurtured: [extract, checks]
-exceptions:
-  - box: extract
-    check: file
-    reason: rules.py は言語の規則表（資料）。段階 2 で YAML に出す
-    until: 2026-12-31
+  vocab:     src/vocab/box.yaml
+  yaml:      src/yaml/box.yaml
+  loader:    src/loader/box.yaml
+  extract:   src/extract/box.yaml
+  checks:    src/checks/box.yaml
+  fsmirror:  src/fsmirror/box.yaml
+  gitmirror: src/gitmirror/box.yaml
+  gramide:   src/gramide/box.yaml
+  clock:     src/clock/box.yaml
+  registry:  src/registry/box.yaml
+  cli:       src/cli/box.yaml
+nurtured: [extract, checks, yaml]
