@@ -30,4 +30,4 @@ fn text_of(w: World, rel: String) -> String =
 
 fn has(w: World, rel: String) -> Bool = list.contains(w.paths, rel)
 
-effect fn write(root: String, rel: String, text: String) -> Result[Unit, String] = fs.write(root + "/" + rel, text)
+effect fn write(root: String, rel: String, text: String) -> Result[Unit, String] = fs.write_text(root + "/" + rel, text)

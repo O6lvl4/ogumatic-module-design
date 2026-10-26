@@ -29,7 +29,7 @@ mod fn count_top_commas(s: String, depth: Int, n: Int) -> Int =
 
 // 署名の括弧の中身。名前の直後の "(" から対応する ")" まで。数行にまたがってよい。
 mod fn signature_inside(lines: List[String], start: Int, name: String) -> String = {
-  let sig = string.join(list.slice(lines, start - 1, int.min(list.len(lines), start + 7)), " ")
+  let sig = list.join(list.slice(lines, start - 1, int.min(list.len(lines), start + 7)), " ")
   let from = option.map(string.index_of(sig, bare(name)), (i) => i + string.len(bare(name))) ?? 0
   let tail = string.drop(sig, from)
   match string.index_of(tail, "(") {
