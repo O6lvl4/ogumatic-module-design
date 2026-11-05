@@ -9,9 +9,9 @@ import self.extract.shape
 type Sym = { kind: String, name: String, owner: String, start: Int, end: Int }
 
 fn symbols(js: String) -> List[Sym] = match json.parse(string.trim(js)) {
-  ok(j) => list.map(json.get_array(j, "symbols") ?? [], (s) => Sym {
-    kind: json.get_string(s, "kind") ?? "", name: json.get_string(s, "name") ?? "",
-    owner: json.get_string(s, "owner") ?? "", start: json.get_int(s, "start") ?? 0, end: json.get_int(s, "end") ?? 0,
+  ok(j) => list.map(value.get_array(j, "symbols") ?? [], (s) => Sym {
+    kind: value.get_string(s, "kind") ?? "", name: value.get_string(s, "name") ?? "",
+    owner: value.get_string(s, "owner") ?? "", start: value.get_int(s, "start") ?? 0, end: value.get_int(s, "end") ?? 0,
   }),
   err(e) => [],
 }
